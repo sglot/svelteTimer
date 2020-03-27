@@ -3,8 +3,25 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
+import postcss from 'rollup-plugin-postcss';
 
 const production = !process.env.ROLLUP_WATCH;
+const postcssOptions = () => ({
+    extensions: ['.scss', '.sass'],
+    extract: 'public/build/sass_bundle.css',
+    minimize: true,
+    use: [
+        ['sass', {
+            includePaths: [
+                './src/theme',
+                './node_modules',
+                // This is only needed because we're using a local module. :-/
+                // Normally, you would not need this line.
+                // path.resolve(__dirname, '..', 'node_modules')
+            ]
+        }]
+    ]
+});
 
 export default {
 	input: 'src/main.js',
@@ -22,7 +39,7 @@ export default {
 			// a separate file - better for performance
 			css: css => {
 				css.write('public/build/bundle.css');
-			}
+			},
 		}),
 
 		// If you have external dependencies installed from
@@ -35,6 +52,7 @@ export default {
 			dedupe: ['svelte']
 		}),
 		commonjs(),
+        postcss(postcssOptions()),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
