@@ -1,4 +1,4 @@
-
+<h2>{cur_state}</h2>
 <div class="settings-block">
         <Textfield type="number" input$min="0" input$max="60" class="shaped-outlined" variant="outlined" bind:value={workTime} label="Время работы" input$aria-controls="helper-text-shaped-outlined-a" input$aria-describedby="helper-text-shaped-outlined-a" />
         <Textfield type="number" input$min="0" input$max="60" class="shaped-outlined" variant="outlined" bind:value={relaxTime} label="Время отдыха" input$aria-controls="helper-text-shaped-outlined-a" input$aria-describedby="helper-text-shaped-outlined-a" />
@@ -80,6 +80,13 @@
 //    import Slider from '@smui/slider'
     import Textfield from '@smui/textfield'
     import Button, {Label} from '@smui/button';
+    import {state} from './stores/stores.js';
+
+    let cur_state;
+
+	const unsubscribe = state.subscribe(value => {
+		cur_state = value;
+	});
 
     function start() {
         remaining = allTime;
