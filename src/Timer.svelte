@@ -1,8 +1,8 @@
-
-
 <h2>{cur_state}</h2>
+{#if !timer}
+  
 
-<div class="settings-block">
+<div class="settings-side">
    <Textfield
     type="number"
     input$min="0"
@@ -25,37 +25,46 @@
     input$aria-describedby="helper-text-shaped-outlined-a" />
 
     <h3 class="status">Кругов: {laps}</h3>
-</div>
 
-<label>
+    <label>
+      <input type="range" bind:value={laps} min="0" max="10" />
+    </label>
 
-  <input type="range" bind:value={laps} min="0" max="10" />
-</label>
-
-<Button on:click={start} variant="unelevated">
-  <Label>Старт</Label>
-</Button>
-
-<div class="time-block">
-    {#if preWorkTime}
-         <p>Начинаем через </p>
-         <p>{preWorkTime}</p>
-    {/if}
-    
-    {#if timer}
-         <p>{timer}</p>
-         <p>{cur_state}</p>
-    {/if}
-    
+    <Button on:click={start} variant="unelevated">
+      <Label>Старт</Label>
+    </Button>
 
 </div>
+{/if}
+<div class="tablo-side">
 
-<div class="common-block-data">
-  <div class="common-block-data-list">
-    <p>Общее время: {minutes} мин {seconds} сек</p>
-    <p>Осталось: {rMinutes} мин {rSeconds} сек</p>
+  <div style="position: relative;"> 
+    <canvas class="clock-circle" width="600" height="600" id="cv"></canvas>
+
+    <div class="time-block">
+        {#if preWorkTime}
+            <p>Начинаем через </p>
+            <p>{preWorkTime}</p>
+        {/if}
+        
+        {#if timer}
+            <p>{timer}</p>
+        {/if}
+    </div>
+
+  </div> 
+            <p>{cur_state}</p>
+  <LinearProgress {progress}{closed} />
+
+  <div class="common-block-data">
+    <div class="common-block-data-list">
+      <p>Общее время: {minutes} мин {seconds} сек</p>
+      <p>Осталось: {rMinutes} мин {rSeconds} сек</p>
+    </div>
   </div>
 </div>
+
+
 
 <style>
   main {
@@ -91,9 +100,19 @@
   }
 
   .time-block {
+    width: 600px;
+    height: 600px;
     display: flex;
     justify-content: center;
     font-size: 5em;
+  }
+
+  .clock-circle {
+    position:absolute; 
+    top: 0;
+    left: 0;
+    width: 600px;
+    height: 600px;
   }
 </style>
 
@@ -107,19 +126,23 @@
   import Button, { Label } from "@smui/button";
   import { state } from "./stores/stores.js";
 
+  import LinearProgress from '@smui/linear-progress';
+
   let workTime = 30;
   let relaxTime = 30;
   let laps = 3;
   let preWorkTime = null;
   let remaining = null;
   let timer = null;
-
-
+  let closed = false;
+  let progress = 0;
   let startIntervalId;
   let preWorktIntervalId;
   let timerIntervalId;
 
   let cur_state;
+  let ctx;
+
 
   const unsubscribe = state.subscribe(value => {
     cur_state = value;
@@ -134,7 +157,17 @@
   $: rMinutes = Math.floor(remaining / 60) - rHours * 60;
   $: rSeconds = remaining % 60;
 
+
+
+
+
+
   function start() {
+    var canvas = document.getElementById('cv');  
+    ctx = canvas.getContext('2d');
+    ctx.strokeStyle = 'red';
+    
+
     remaining = allTime;
     
 
@@ -151,6 +184,7 @@
     preWorktIntervalId = setInterval(() => {
       preWorkTime--;
       if (0 === preWorkTime) {
+          
         clearInterval(preWorktIntervalId);
         startRemaining();
         state.update(state => "work");
@@ -165,7 +199,9 @@
     timer = workTime;
     timerIntervalId = setInterval(() => {
       timer--;
+         circle();
       if (0 === timer) {
+       
         clearInterval(timerIntervalId);
         if (cur_state === 'work') {
         state.update(state => "relax");
@@ -200,6 +236,8 @@
   function startRemaining() {
       startIntervalId = setInterval(() => {
       remaining--;
+      progress = ((allTime - remaining) * 100 ) / allTime / 100;
+      console.log (progress);
       if (remaining === 0) {
         clearInterval(startIntervalId);
         alert("Типа закончил");
@@ -207,4 +245,15 @@
       }
     }, 1000);
   };
+
+  function circle() {
+  
+    ctx.beginPath();
+    ctx.clearRect(0, 0, 600, 600);
+    let rad = ((workTime - timer) * (180/workTime)) * (Math.PI * 2) / 180;
+    ctx.arc(300, 300, 150,  -Math.PI / 2, rad - Math.PI / 2, false);            
+    ctx.stroke();
+  }
+
+
 </script>
