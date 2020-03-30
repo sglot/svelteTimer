@@ -154,7 +154,7 @@
   import Button, { Label } from "@smui/button";
 
   import { state } from "./stores/stores.js";
-  import { list } from "./stores/stores.js";
+  import { stateList } from "./stores/stores.js";
 
   import { tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
