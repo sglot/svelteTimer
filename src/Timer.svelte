@@ -1,5 +1,5 @@
 {#if !remaining}
-    <h2>Параметры</h2>
+    <h2 transition:fade>Параметры</h2>
 
     <div class="settings-side">
        <Textfield
@@ -41,7 +41,7 @@
   <div style="position: relative; display: flex; justify-content: space-between;">
 
 
-    <div class="time-block " class:text--disabled="{cur_state !== 'work'}">
+    <div class="time-block " class:text--disabled="{cur_state !== 'work'}" transition:fade> 
         <p>{states.work}</p>
     </div>
 
@@ -61,7 +61,7 @@
         </div>
     </div>
 
-    <div class="time-block" class:text--disabled="{cur_state !== 'relax'}">
+    <div class="time-block" class:text--disabled="{cur_state !== 'relax'}" transition:fade>
         <p>{states.relax}</p>
     </div>
   </div> 
@@ -95,11 +95,23 @@
   }
 
   @media (min-width: 640px) {
-    main {
-      max-width: none;
+    
+  }
+
+  @media screen and (max-width: 479px) {
+    .time-block {
+      font-size: 2em!important;
     }
   }
 
+  .time-block {
+    width: 300px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    font-size: 5em;
+    flex-flow: column;
+  }
   .common-block-data {
     display: flex;
     justify-content: flex-end;
@@ -113,14 +125,7 @@
     text-align: justify;
   }
 
-  .time-block {
-    width: 300px;
-    height: 300px;
-    display: flex;
-    justify-content: center;
-    font-size: 5em;
-    flex-flow: column;
-  }
+
 
   .clock-circle {
     position:absolute; 
@@ -158,6 +163,8 @@
 
   import { tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
+  import { spring } from 'svelte/motion';
+  import { fade } from 'svelte/transition';
 
   let workTime = 30;
   let relaxTime = 30;
@@ -229,12 +236,12 @@
     ctx.strokeStyle = '#ff3e00';
 
     timerIntervalId = setInterval(() => {
-      counterTimer = counterTimer + 0.1; 
+      counterTimer = counterTimer + 0.05; 
       timer = Math.ceil(workTime - counterTimer);
       circle(workTime);
 
       isMomentForNextState();
-      }, 100);
+      }, 50);
   }
 
   function relax() {
@@ -243,12 +250,12 @@
     ctx.strokeStyle = '#4252ff';
 
     timerIntervalId = setInterval(() => {
-     counterTimer = counterTimer - 0.1; 
+     counterTimer = counterTimer - 0.05; 
      timer = Math.ceil(counterTimer);
      circle(relaxTime);
      
      isMomentForNextState();
-    }, 100);
+    }, 50);
   };
 
   function isMomentForNextState() {
@@ -269,25 +276,33 @@
   
   function startRemaining() {
     startIntervalId = setInterval(() => {
-        remaining = remaining - 0.1;
-        progress.set( ((allTime - remaining) * 100 ) / allTime / 100);
-
-        if (remaining === 0) {
+      if (remaining <= 0) {
+        remaining = 0;
           clearInterval(startIntervalId);
           stop();
-        }
+      } else {
+
+        remaining = remaining - 0.1;
+        progress.set( ((allTime - remaining) * 100 ) / allTime / 100);
+      }
+        
     }, 100);
   };
 
   function stop() {
       timer = 0;
       clearInterval(timerIntervalId);
+      
   }
 
   function circle(timeValue) {
     ctx.beginPath();
     ctx.clearRect(0, 0, 300, 300);
     let rad = ((counterTimer) * (180/timeValue)) * (Math.PI * 2) / 180;
+    spring(rad, {
+		stiffness: 0.1,
+		damping: 0.25
+	});
     ctx.lineWidth = 8;
     ctx.arc(150, 150, 141.5,  -Math.PI / 2, rad - Math.PI / 2, false);
     ctx.stroke();
