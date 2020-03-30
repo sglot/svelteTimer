@@ -41,8 +41,8 @@
   <div style="position: relative; display: flex; justify-content: space-between;">
 
 
-    <div class="time-block " class:text--disabled="{cur_state === 'relax'}">
-        <p>Нагрузка</p>
+    <div class="time-block " class:text--disabled="{cur_state !== 'work'}">
+        <p>{stateList.work}</p>
     </div>
 
 
@@ -61,19 +61,19 @@
         </div>
     </div>
 
-    <div class="time-block" class:text--disabled="{cur_state === 'work'}>
-        <p>Отдых</p>
+    <div class="time-block" class:text--disabled="{cur_state !== 'relax'}">
+        <p>{stateList.relax}</p>
     </div>
   </div> 
 
-  <p>{cur_state}</p>
-  <LinearProgress {progress}{closed} />
+
 
   <div class="common-block-data">
     <div class="common-block-data-list">
-      <p>Общее время: {minutes} мин {seconds} сек</p>
-      <p>Осталось: {rMinutes} мин {rSeconds} сек</p>
+      <span>Общее время: {minutes} мин {seconds} сек</span>
+      <span>Осталось: {rMinutes} мин {rSeconds} сек</span>
     </div>
+    <progress value={$progress}></progress>
   </div>
 </div>
 
@@ -103,11 +103,12 @@
   .common-block-data {
     display: flex;
     justify-content: flex-end;
+    flex-direction: column;
   }
 
   .common-block-data-list {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: space-between;
     text-align: justify;
   }
@@ -134,8 +135,13 @@
   }
 
   .text--disabled {
-      opacity: 0.5;
-    }
+    opacity: 0.5;
+  }
+
+  progress {
+    display: block;
+    width: 100%;
+  }
 </style>
 
 
@@ -143,33 +149,46 @@
 
 
 <script>
-  //    import Slider from '@smui/slider'
+
   import Textfield from "@smui/textfield";
   import Button, { Label } from "@smui/button";
-  import { state } from "./stores/stores.js";
 
-  import LinearProgress from '@smui/linear-progress';
+  import { state } from "./stores/stores.js";
+  import { list } from "./stores/stores.js";
+
+  import { tweened } from 'svelte/motion';
+  import { cubicOut } from 'svelte/easing';
 
   let workTime = 30;
   let relaxTime = 30;
   let laps = 3;
+
   let preWorkTime = null;
   let remaining = null;
   let timer = null;
   let counterTimer = 0;
-  let closed = false;
-  let progress = 0;
+
   let startIntervalId;
   let preWorktIntervalId;
   let timerIntervalId;
 
   let cur_state;
+  let stateList;
   let ctx;
 
 
   const unsubscribe = state.subscribe(value => {
     cur_state = value;
   });
+
+  const unsubscribeList = list.subscribe(value => {
+      stateList = value;
+    });
+
+  const progress = tweened(0, {
+  		duration: 400,
+  		easing: cubicOut
+  	});
 
   $: allTime = (workTime + relaxTime) * laps - relaxTime;
   $: hours = Math.floor(allTime / 60 / 60);
@@ -178,19 +197,15 @@
 
   $: rHours = Math.floor(remaining / 60 / 60);
   $: rMinutes = Math.floor(remaining / 60) - rHours * 60;
-  $: rSeconds = remaining % 60;
-
-
-
+  $: rSeconds = Math.round(remaining % 60);
 
 
 
   function start() {
     var canvas = document.getElementById('cv');  
     ctx = canvas.getContext('2d');
-    ctx.strokeStyle = 'red';
-    
     remaining = allTime;
+
     preWork();
   }
 
@@ -214,6 +229,8 @@
   function work() {
     //timer = workTime;
     counterTimer = 0;
+    ctx.strokeStyle = '#ff3e00';
+
     timerIntervalId = setInterval(() => {
       counterTimer = counterTimer + 0.1; 
       timer = Math.ceil(workTime - counterTimer);
@@ -236,10 +253,12 @@
       clearInterval(timerIntervalId);
   }
 
-  function disp() {};
+
   function relax() {
    // timer = relaxTime;
     counterTimer = relaxTime;
+    ctx.strokeStyle = '#4252ff';
+
     timerIntervalId = setInterval(() => {
      
      counterTimer = counterTimer - 0.1; 
@@ -260,31 +279,21 @@
 
   function startRemaining() {
       startIntervalId = setInterval(() => {
-      remaining--;
-      progress = ((allTime - remaining) * 100 ) / allTime / 100;
-      console.log (progress);
-      if (remaining === 0) {
-        clearInterval(startIntervalId);
-        alert("Типа закончил");
-        stop();
-      }
-    }, 1000);
+          remaining = remaining - 0.1;
+          progress.set( ((allTime - remaining) * 100 ) / allTime / 100);
+
+          if (remaining === 0) {
+            clearInterval(startIntervalId);
+            stop();
+          }
+    }, 100);
   };
 
-  function circle() {
-  
+  function circleNEW(rr) {
     ctx.beginPath();
     ctx.clearRect(0, 0, 300, 300);
-    let rad = ((workTime - timer) * (180/workTime)) * (Math.PI * 2) / 180;
-    ctx.arc(150, 150, 150,  -Math.PI / 2, rad - Math.PI / 2, false);
-    ctx.stroke();
-  }
-  function circleNEW(rr) {
-  
-    ctx.beginPath();
-    ctx.clearRect(0, 0, 600, 600);
     let rad = ((counterTimer) * (180/rr)) * (Math.PI * 2) / 180;
-    ctx.arc(300, 300, 150,  -Math.PI / 2, rad - Math.PI / 2, false);            
+    ctx.arc(150, 150, 149.5,  -Math.PI / 2, rad - Math.PI / 2, false);
     ctx.stroke();
   }
 
