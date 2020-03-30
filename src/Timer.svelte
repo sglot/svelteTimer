@@ -26,7 +26,7 @@
         <h3 class="status">Кругов: {laps}</h3>
 
         <label>
-          <input type="range" bind:value={laps} min="0" max="10" />
+          <input type="range" bind:value={laps} min="1" max="10" />
         </label>
 
         <Button on:click={start} variant="unelevated">
@@ -42,7 +42,7 @@
 
 
     <div class="time-block " class:text--disabled="{cur_state !== 'work'}">
-        <p>{stateList.work}</p>
+        <p>{states.work}</p>
     </div>
 
 
@@ -62,7 +62,7 @@
     </div>
 
     <div class="time-block" class:text--disabled="{cur_state !== 'relax'}">
-        <p>{stateList.relax}</p>
+        <p>{states.relax}</p>
     </div>
   </div> 
 
@@ -150,11 +150,11 @@
 
 <script>
 
-  import Textfield from "@smui/textfield";
-  import Button, { Label } from "@smui/button";
-
   import { state } from "./stores/stores.js";
   import { stateList } from "./stores/stores.js";
+
+  import Textfield from "@smui/textfield";
+  import Button, { Label } from "@smui/button";
 
   import { tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
@@ -173,7 +173,7 @@
   let timerIntervalId;
 
   let cur_state;
-  let stateList;
+  let states;
   let ctx;
 
 
@@ -181,8 +181,8 @@
     cur_state = value;
   });
 
-  const unsubscribeList = list.subscribe(value => {
-      stateList = value;
+  const unsubscribeList = stateList.subscribe(value => {
+      states = value;
     });
 
   const progress = tweened(0, {
@@ -215,15 +215,12 @@
     preWorktIntervalId = setInterval(() => {
       preWorkTime--;
       if (0 === preWorkTime) {
-          
         clearInterval(preWorktIntervalId);
         startRemaining();
         state.update(state => "work");
         work();
       }
     }, 1000);
-
-
   }
 
   function work() {
@@ -234,25 +231,11 @@
     timerIntervalId = setInterval(() => {
       counterTimer = counterTimer + 0.1; 
       timer = Math.ceil(workTime - counterTimer);
-      circleNEW(workTime);
-    
-      if (0 === timer) {
-          counterTimer = 0;
-          clearInterval(timerIntervalId);
-          if (cur_state === 'work') {
-          state.update(state => "relax");
-          relax();
-          }
-          
-        }
+      circle(workTime);
+
+      isMomentForNextState();
       }, 100);
   }
-
-  function stop() {
-      timer = 0;
-      clearInterval(timerIntervalId);
-  }
-
 
   function relax() {
    // timer = relaxTime;
@@ -260,40 +243,53 @@
     ctx.strokeStyle = '#4252ff';
 
     timerIntervalId = setInterval(() => {
-     
      counterTimer = counterTimer - 0.1; 
      timer = Math.ceil(counterTimer);
-     circleNEW(relaxTime);
+     circle(relaxTime);
      
-     if (0 === timer) {
+     isMomentForNextState();
+    }, 100);
+  };
+
+  function isMomentForNextState() {
+    if (0 === timer) {
         counterTimer = 0;
         clearInterval(timerIntervalId);
-        if (cur_state === 'relax') {
-        state.update(state => "work");
-        work();
-        }
-        
-      }
-    }, 100);
-  };
-
-  function startRemaining() {
-      startIntervalId = setInterval(() => {
-          remaining = remaining - 0.1;
-          progress.set( ((allTime - remaining) * 100 ) / allTime / 100);
-
-          if (remaining === 0) {
-            clearInterval(startIntervalId);
-            stop();
+        if(remaining > 0) {
+          if (cur_state === 'relax') {
+            state.update(state => "work");
+            work();
+          } else if (cur_state === 'work') {
+            state.update(state => "relax");
+            relax();
           }
+        }
+    }
+  }
+  
+  function startRemaining() {
+    startIntervalId = setInterval(() => {
+        remaining = remaining - 0.1;
+        progress.set( ((allTime - remaining) * 100 ) / allTime / 100);
+
+        if (remaining === 0) {
+          clearInterval(startIntervalId);
+          stop();
+        }
     }, 100);
   };
 
-  function circleNEW(rr) {
+  function stop() {
+      timer = 0;
+      clearInterval(timerIntervalId);
+  }
+
+  function circle(timeValue) {
     ctx.beginPath();
     ctx.clearRect(0, 0, 300, 300);
-    let rad = ((counterTimer) * (180/rr)) * (Math.PI * 2) / 180;
-    ctx.arc(150, 150, 149.5,  -Math.PI / 2, rad - Math.PI / 2, false);
+    let rad = ((counterTimer) * (180/timeValue)) * (Math.PI * 2) / 180;
+    ctx.lineWidth = 8;
+    ctx.arc(150, 150, 141.5,  -Math.PI / 2, rad - Math.PI / 2, false);
     ctx.stroke();
   }
 
