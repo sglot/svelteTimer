@@ -134,6 +134,7 @@
   let preWorkTime = null;
   let remaining = null;
   let timer = null;
+  let counterTimer = 0;
   let closed = false;
   let progress = 0;
   let startIntervalId;
@@ -196,20 +197,23 @@
   }
 
   function work() {
-    timer = workTime;
+    //timer = workTime;
+    counterTimer = 0;
     timerIntervalId = setInterval(() => {
-      timer--;
-         circle();
+      counterTimer = counterTimer + 0.1; 
+      timer = Math.ceil(workTime - counterTimer);
+      circleNEW(workTime);
+    
       if (0 === timer) {
-       
-        clearInterval(timerIntervalId);
-        if (cur_state === 'work') {
-        state.update(state => "relax");
-        relax();
+          counterTimer = 0;
+          clearInterval(timerIntervalId);
+          if (cur_state === 'work') {
+          state.update(state => "relax");
+          relax();
+          }
+          
         }
-        
-      }
-    }, 1000);
+      }, 100);
   }
 
   function stop() {
@@ -219,10 +223,16 @@
 
   function disp() {};
   function relax() {
-    timer = relaxTime;
+   // timer = relaxTime;
+    counterTimer = relaxTime;
     timerIntervalId = setInterval(() => {
-      timer--;
-      if (0 === timer) {
+     
+     counterTimer = counterTimer - 0.1; 
+     timer = Math.ceil(counterTimer);
+     circleNEW(relaxTime);
+     
+     if (0 === timer) {
+        counterTimer = 0;
         clearInterval(timerIntervalId);
         if (cur_state === 'relax') {
         state.update(state => "work");
@@ -230,7 +240,7 @@
         }
         
       }
-    }, 1000);
+    }, 100);
   };
 
   function startRemaining() {
@@ -251,6 +261,14 @@
     ctx.beginPath();
     ctx.clearRect(0, 0, 600, 600);
     let rad = ((workTime - timer) * (180/workTime)) * (Math.PI * 2) / 180;
+    ctx.arc(300, 300, 150,  -Math.PI / 2, rad - Math.PI / 2, false);            
+    ctx.stroke();
+  }
+  function circleNEW(rr) {
+  
+    ctx.beginPath();
+    ctx.clearRect(0, 0, 600, 600);
+    let rad = ((counterTimer) * (180/rr)) * (Math.PI * 2) / 180;
     ctx.arc(300, 300, 150,  -Math.PI / 2, rad - Math.PI / 2, false);            
     ctx.stroke();
   }
