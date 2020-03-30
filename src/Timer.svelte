@@ -1,59 +1,72 @@
-<h2>{cur_state}</h2>
-{#if !timer}
-  
+{#if !remaining}
+    <h2>Параметры</h2>
 
-<div class="settings-side">
-   <Textfield
-    type="number"
-    input$min="0"
-    input$max="60"
-    class="shaped-outlined"
-    variant="outlined"
-    bind:value={workTime}
-    label="Время работы"
-    input$aria-controls="helper-text-shaped-outlined-a"
-    input$aria-describedby="helper-text-shaped-outlined-a" />
-  <Textfield
-    type="number"
-    input$min="0"
-    input$max="60"
-    class="shaped-outlined"
-    variant="outlined"
-    bind:value={relaxTime}
-    label="Время отдыха"
-    input$aria-controls="helper-text-shaped-outlined-a"
-    input$aria-describedby="helper-text-shaped-outlined-a" />
+    <div class="settings-side">
+       <Textfield
+        type="number"
+        input$min="0"
+        input$max="60"
+        class="shaped-outlined"
+        variant="outlined"
+        bind:value={workTime}
+        label="Время работы"
+        input$aria-controls="helper-text-shaped-outlined-a"
+        input$aria-describedby="helper-text-shaped-outlined-a" />
+      <Textfield
+        type="number"
+        input$min="0"
+        input$max="60"
+        class="shaped-outlined"
+        variant="outlined"
+        bind:value={relaxTime}
+        label="Время отдыха"
+        input$aria-controls="helper-text-shaped-outlined-a"
+        input$aria-describedby="helper-text-shaped-outlined-a" />
 
-    <h3 class="status">Кругов: {laps}</h3>
+        <h3 class="status">Кругов: {laps}</h3>
 
-    <label>
-      <input type="range" bind:value={laps} min="0" max="10" />
-    </label>
+        <label>
+          <input type="range" bind:value={laps} min="0" max="10" />
+        </label>
 
-    <Button on:click={start} variant="unelevated">
-      <Label>Старт</Label>
-    </Button>
+        <Button on:click={start} variant="unelevated">
+          <Label>Старт</Label>
+        </Button>
 
-</div>
+    </div>
 {/if}
+
 <div class="tablo-side">
 
-  <div style="position: relative;"> 
-    <canvas class="clock-circle" width="600" height="600" id="cv"></canvas>
+  <div style="position: relative; display: flex; justify-content: space-between;">
 
-    <div class="time-block">
-        {#if preWorkTime}
-            <p>Начинаем через </p>
-            <p>{preWorkTime}</p>
-        {/if}
-        
-        {#if timer}
-            <p>{timer}</p>
-        {/if}
+
+    <div class="time-block " class:text--disabled="{cur_state === 'relax'}">
+        <p>Нагрузка</p>
     </div>
 
+
+    <div style="position: relative;" >
+        <canvas class="clock-circle" width="300" height="300" id="cv"></canvas>
+
+        <div class="time-block">
+            {#if preWorkTime}
+                <p style="font-size: 0.5em">Начинаем через </p>
+                <span>{preWorkTime}</span>
+            {/if}
+
+            {#if timer}
+                <p>{timer}</p>
+            {/if}
+        </div>
+    </div>
+
+    <div class="time-block" class:text--disabled="{cur_state === 'work'}>
+        <p>Отдых</p>
+    </div>
   </div> 
-            <p>{cur_state}</p>
+
+  <p>{cur_state}</p>
   <LinearProgress {progress}{closed} />
 
   <div class="common-block-data">
@@ -100,20 +113,29 @@
   }
 
   .time-block {
-    width: 600px;
-    height: 600px;
+    width: 300px;
+    height: 300px;
     display: flex;
     justify-content: center;
     font-size: 5em;
+    flex-flow: column;
   }
 
   .clock-circle {
     position:absolute; 
     top: 0;
     left: 0;
-    width: 600px;
-    height: 600px;
+    /*width: 600px;*/
+    /*height: 600px;*/
   }
+
+  .text--active {
+    opacity: 1;
+  }
+
+  .text--disabled {
+      opacity: 0.5;
+    }
 </style>
 
 
@@ -167,15 +189,8 @@
     ctx = canvas.getContext('2d');
     ctx.strokeStyle = 'red';
     
-
     remaining = allTime;
-    
-
     preWork();
-
-    
-
-    
   }
 
   function preWork() {
@@ -249,9 +264,9 @@
   function circle() {
   
     ctx.beginPath();
-    ctx.clearRect(0, 0, 600, 600);
+    ctx.clearRect(0, 0, 300, 300);
     let rad = ((workTime - timer) * (180/workTime)) * (Math.PI * 2) / 180;
-    ctx.arc(300, 300, 150,  -Math.PI / 2, rad - Math.PI / 2, false);            
+    ctx.arc(150, 150, 150,  -Math.PI / 2, rad - Math.PI / 2, false);
     ctx.stroke();
   }
 
