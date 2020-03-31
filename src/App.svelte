@@ -2,7 +2,7 @@
     import Button from '@smui/button';
     import Timer from './Timer.svelte';
 
-    let showTimer = false;
+    let showTimer = true;
 
     export let name;
 

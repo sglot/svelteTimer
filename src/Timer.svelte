@@ -7,6 +7,7 @@
         input$min="0"
         input$max="60"
         class="shaped-outlined"
+        style="margin: 1em;"
         variant="outlined"
         bind:value={workTime}
         label="Время работы"
@@ -17,6 +18,7 @@
         input$min="0"
         input$max="60"
         class="shaped-outlined"
+        style="margin: 1em;"
         variant="outlined"
         bind:value={relaxTime}
         label="Время отдыха"
@@ -38,7 +40,7 @@
 
 <div class="tablo-side">
 
-  <div style="position: relative; display: flex; justify-content: space-between;">
+  <div class="clock-common">
 
 
     <div class="time-block " class:text--disabled="{cur_state !== 'work'}" transition:fade> 
@@ -46,16 +48,16 @@
     </div>
 
 
-    <div style="position: relative;" >
-        <canvas class="clock-circle" width="300" height="300" id="cv"></canvas>
+    <div style="position: relative;" class=" circle-height">
+        <canvas class="clock-circle" width="0" id="cv"></canvas>
 
-        <div class="time-block">
+        <div class="time-block  circle-height">
             {#if preWorkTime}
                 <p style="font-size: 0.5em">Начинаем через </p>
                 <span>{preWorkTime}</span>
             {/if}
 
-            {#if timer}
+            {#if null !== timer}
                 <p>{timer}</p>
             {/if}
         </div>
@@ -70,7 +72,9 @@
 
   <div class="common-block-data">
     <div class="common-block-data-list">
-      <span>Общее время: {minutes} мин {seconds} сек</span>
+        {#if !mobile}
+      <span >Общее время: {minutes} мин {seconds} сек</span>
+      {/if}
       <span>Осталось: {rMinutes} мин {rSeconds} сек</span>
     </div>
     <progress value={$progress}></progress>
@@ -101,7 +105,22 @@
   @media screen and (max-width: 479px) {
     .time-block {
       font-size: 2em!important;
+      width: 100%!important;
+      height: 2.3em!important;
     }
+
+    .clock-common {
+       flex-flow: column;
+    }
+
+    .common-block-data {
+        font-size: 0.7em;
+    }
+
+    .circle-height {
+        height: 150px !important;
+    }
+
   }
 
   .time-block {
@@ -125,12 +144,10 @@
     text-align: justify;
   }
 
-
-
   .clock-circle {
     position:absolute; 
-    top: 0;
-    left: 0;
+    /*top: 0;*/
+    /*left: 0;*/
     /*width: 600px;*/
     /*height: 600px;*/
   }
@@ -146,6 +163,22 @@
   progress {
     display: block;
     width: 100%;
+  }
+
+  .marg {
+    margin: 1em!important;
+    background-color: #333333;
+  }
+
+  .clock-common {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  input[type="number"] {
+    display: none!important;
+    font-size: 10em;
   }
 </style>
 
@@ -182,6 +215,7 @@
   let cur_state;
   let states;
   let ctx;
+  let mobile = false;
 
 
   const unsubscribe = state.subscribe(value => {
@@ -209,10 +243,18 @@
 
 
   function start() {
-    var canvas = document.getElementById('cv');  
+    var canvas = document.getElementById('cv');
+    canvas.width = 300;
+    canvas.height = 300;
     ctx = canvas.getContext('2d');
-    remaining = allTime;
 
+    if (window.innerWidth < 400) {
+        mobile = true;
+        canvas.width = canvas.height = canvas.width / 2;
+        canvas.style.left = canvas.offsetLeft - canvas.width / 2  + 'px';
+    }
+
+    remaining = allTime;
     preWork();
   }
 
@@ -233,7 +275,7 @@
   function work() {
     //timer = workTime;
     counterTimer = 0;
-    ctx.strokeStyle = '#ff3e00';
+    ctx.strokeStyle = '#ff7c20';
 
     timerIntervalId = setInterval(() => {
       counterTimer = counterTimer + 0.05; 
@@ -247,7 +289,7 @@
   function relax() {
    // timer = relaxTime;
     counterTimer = relaxTime;
-    ctx.strokeStyle = '#4252ff';
+    ctx.strokeStyle = '#3b99ff';
 
     timerIntervalId = setInterval(() => {
      counterTimer = counterTimer - 0.05; 
@@ -296,15 +338,23 @@
   }
 
   function circle(timeValue) {
+      let circleWidth = 300;
+      let circleHeight = 300;
+      let lineWidth = 8;
+    if (window.innerWidth < 400) {
+        circleWidth = circleHeight = circleWidth / 2;
+        lineWidth /= 2;
+    }
     ctx.beginPath();
-    ctx.clearRect(0, 0, 300, 300);
+    ctx.clearRect(0, 0, circleWidth, circleHeight);
     let rad = ((counterTimer) * (180/timeValue)) * (Math.PI * 2) / 180;
+    let radius = Math.round(circleHeight/2) - lineWidth - 0.5;
     spring(rad, {
 		stiffness: 0.1,
 		damping: 0.25
 	});
-    ctx.lineWidth = 8;
-    ctx.arc(150, 150, 141.5,  -Math.PI / 2, rad - Math.PI / 2, false);
+    ctx.lineWidth = lineWidth;
+    ctx.arc(circleHeight / 2, circleHeight / 2, radius,  -Math.PI / 2, rad - Math.PI / 2, false);
     ctx.stroke();
   }
 
