@@ -1,7 +1,8 @@
 {#if !remaining}
-    <h2 transition:fade>Параметры</h2>
 
-    <div class="settings-side">
+    <div class="settings-side" id="settings" class:tiny="{remaining}" transition:slide="{{delay: 250, duration: 1000,}}">
+        <h2 transition:fade>Параметры</h2>
+
        <Textfield
         type="number"
         input$min="0"
@@ -53,12 +54,12 @@
 
         <div class="time-block  circle-height">
             {#if preWorkTime}
-                <p style="font-size: 0.5em">Начинаем через </p>
-                <span>{preWorkTime}</span>
+                <p style="font-size: 0.5em" transition:slide="{{delay: 250, duration: 1000}}">Начинаем через </p>
+                <span transition:slide="{{delay: 250, duration: 1000}}">{preWorkTime}</span>
             {/if}
 
             {#if null !== timer}
-                <p>{timer}</p>
+                <p transition:slide="{{delay: 250, duration: 1000}}">{timer}</p>
             {/if}
         </div>
     </div>
@@ -123,6 +124,11 @@
 
   }
 
+   .settings-side {
+    position: relative;
+    top: 0;
+   }
+
   .time-block {
     width: 300px;
     height: 300px;
@@ -180,6 +186,11 @@
     display: none!important;
     font-size: 10em;
   }
+
+  .tiny {
+    transition: top 1s cubic-bezier(0, 0, 1, 1) 500ms;
+    top: -1000px!important;
+  }
 </style>
 
 
@@ -198,6 +209,10 @@
   import { cubicOut } from 'svelte/easing';
   import { spring } from 'svelte/motion';
   import { fade } from 'svelte/transition';
+  import { slide } from 'svelte/transition';
+import { quintOut } from 'svelte/easing';
+	import { crossfade } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
 
   let workTime = 30;
   let relaxTime = 30;
@@ -214,9 +229,14 @@
 
   let cur_state;
   let states;
+
+  let canvas;
   let ctx;
   let mobile = false;
 
+  let circleWidth = 300;
+  let circleHeight = 300;
+  let lineWidth = 8;
 
   const unsubscribe = state.subscribe(value => {
     cur_state = value;
@@ -243,19 +263,25 @@
 
 
   function start() {
-    var canvas = document.getElementById('cv');
-    canvas.width = 300;
-    canvas.height = 300;
-    ctx = canvas.getContext('2d');
-
-    if (window.innerWidth < 400) {
-        mobile = true;
-        canvas.width = canvas.height = canvas.width / 2;
-        canvas.style.left = canvas.offsetLeft - canvas.width / 2  + 'px';
-    }
-
-    remaining = allTime;
+    circleInit();
     preWork();
+    remaining = allTime;
+  }
+
+  function circleInit() {
+      canvas = document.getElementById('cv');
+      canvas.width = circleWidth;
+      canvas.height = circleWidth;
+      ctx = canvas.getContext('2d');
+      canvas.style.left = 0 + 'px';
+
+      if (window.innerWidth < 400) {
+          mobile = true;
+          circleWidth = circleHeight = circleWidth / 2;
+          lineWidth /= 2;
+          canvas.width = canvas.height = circleWidth;
+          canvas.style.left = canvas.offsetLeft - canvas.width / 2  + 'px';
+      }
   }
 
   function preWork() {
@@ -338,25 +364,28 @@
   }
 
   function circle(timeValue) {
-      let circleWidth = 300;
-      let circleHeight = 300;
-      let lineWidth = 8;
-    if (window.innerWidth < 400) {
-        circleWidth = circleHeight = circleWidth / 2;
-        lineWidth /= 2;
-    }
+
     ctx.beginPath();
     ctx.clearRect(0, 0, circleWidth, circleHeight);
     let rad = ((counterTimer) * (180/timeValue)) * (Math.PI * 2) / 180;
     let radius = Math.round(circleHeight/2) - lineWidth - 0.5;
-    spring(rad, {
-		stiffness: 0.1,
-		damping: 0.25
-	});
+
     ctx.lineWidth = lineWidth;
     ctx.arc(circleHeight / 2, circleHeight / 2, radius,  -Math.PI / 2, rad - Math.PI / 2, false);
     ctx.stroke();
   }
 
 
+  function rideUp(node, { duration }) {
+  		return {
+  			duration,
+  			css: t => {
+//  				const eased = elasticOut(t);
+
+  				return `
+  					transition: top 1s cubic-bezier(0, 0, 1, 1) 500ms;
+                    top: -1000px!important;`
+  			}
+  		};
+  	}
 </script>
