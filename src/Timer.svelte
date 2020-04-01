@@ -59,7 +59,7 @@
             {/if}
 
             {#if null !== timer}
-                <p transition:slide="{{delay: 250, duration: 1000}}">{timer}</p>
+                <p transition:slide="{{delay: 250, duration: 1000}}">{timerFormated}</p>
             {/if}
         </div>
     </div>
@@ -210,7 +210,7 @@
   import { spring } from 'svelte/motion';
   import { fade } from 'svelte/transition';
   import { slide } from 'svelte/transition';
-import { quintOut } from 'svelte/easing';
+  import { quintOut } from 'svelte/easing';
 	import { crossfade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
@@ -221,11 +221,15 @@ import { quintOut } from 'svelte/easing';
   let preWorkTime = null;
   let remaining = null;
   let timer = null;
+  let timerFormated = null;
   let counterTimer = 0;
 
   let startIntervalId;
   let preWorktIntervalId;
   let timerIntervalId;
+
+  let flyInterval;
+  let isInitState = false;
 
   let cur_state;
   let states;
@@ -254,112 +258,160 @@ import { quintOut } from 'svelte/easing';
   $: allTime = (workTime + relaxTime) * laps - relaxTime;
   $: hours = Math.floor(allTime / 60 / 60);
   $: minutes = Math.floor(allTime / 60) - hours * 60;
-  $: seconds = allTime % 60;
+  $: seconds = Math.round(allTime % 60);
 
-  $: rHours = Math.floor(remaining / 60 / 60);
-  $: rMinutes = Math.floor(remaining / 60) - rHours * 60;
+  $: rHours = Math.round(remaining / 60 / 60);
+  $: rMinutes = Math.round(remaining / 60) - rHours * 60;
   $: rSeconds = Math.round(remaining % 60);
 
 
 
   function start() {
-    circleInit();
-    preWork();
-    remaining = allTime;
+    init();
+    cur_state = 'preWork';
+    // remaining = allTime;
+
+    flyInterval = setInterval(() => {
+        fly();
+    }, 50);
+ 
   }
 
-  function circleInit() {
-      canvas = document.getElementById('cv');
-      canvas.width = circleWidth;
-      canvas.height = circleWidth;
-      ctx = canvas.getContext('2d');
-      canvas.style.left = 0 + 'px';
+  function fly() {
+    if (cur_state === 'preWork') {
+      preWork();
+    }
 
-      if (window.innerWidth < 400) {
-          mobile = true;
-          circleWidth = circleHeight = circleWidth / 2;
-          lineWidth /= 2;
-          canvas.width = canvas.height = circleWidth;
-          canvas.style.left = canvas.offsetLeft - canvas.width / 2  + 'px';
-      }
+    if (cur_state === 'work') {
+      work();
+    }
+
+    if (cur_state === 'relax') {
+      relax();
+    }
+
+    if (cur_state === 'recovery') {
+      // work();
+    }
+
+    if (cur_state === 'pause') {
+      // work();
+    }
+
+    
+  }
+
+  function init() {
+    preWorkTime = 3;
+    remaining = allTime;
+
+    canvas = document.getElementById('cv');
+    canvas.width = circleWidth;
+    canvas.height = circleWidth;
+    ctx = canvas.getContext('2d');
+    canvas.style.left = 0 + 'px';
+
+    if (window.innerWidth < 400) {
+      mobile = true;
+      circleWidth = circleHeight = circleWidth / 2;
+      lineWidth /= 2;
+      canvas.width = canvas.height = circleWidth;
+      canvas.style.left = canvas.offsetLeft - canvas.width / 2  + 'px';
+    }
   }
 
   function preWork() {
     // до начала 3,2,1...
-    preWorkTime = 3;
-    preWorktIntervalId = setInterval(() => {
-      preWorkTime--;
-      if (0 === preWorkTime) {
-        clearInterval(preWorktIntervalId);
-        startRemaining();
-        state.update(state => "work");
-        work();
-      }
-    }, 1000);
+    if (!isInitState) {
+      preWorktIntervalId = setInterval(() => {
+        preWorkTime--;
+        if (0 === preWorkTime) {
+          clearInterval(preWorktIntervalId);
+          // startRemaining();
+          setTimeout(()=>{
+            state.update(state => "work");
+            isInitState = false;
+          }, 1000)
+          
+        }
+      }, 1000);
+      isInitState = true;
+    }
+    
   }
 
   function work() {
     //timer = workTime;
-    counterTimer = 0;
-    ctx.strokeStyle = '#ff7c20';
+    console.log('work ' + timer);
+    if (!isInitState) {
+      counterTimer = 0;
+      ctx.strokeStyle = '#ff7c20';
+      isInitState = true;
+    }
 
-    timerIntervalId = setInterval(() => {
-      counterTimer = counterTimer + 0.05; 
-      timer = Math.ceil(workTime - counterTimer);
-      circle(workTime);
-
-      isMomentForNextState();
-      }, 50);
+    counterTimer = counterTimer + 0.05; 
+    // if (Math.trunc(workTime - counterTimer) === Math.round(workTime - counterTimer, -5)) {
+    timer = workTime - counterTimer;
+    timerFormated = Math.round(timer, -5);
+    // }
+    startRemaining();
+    circle(workTime);
+console.log('work after' + timer);
+console.log('counterTimer after' + counterTimer);
+    isMomentForNextState();
   }
 
   function relax() {
    // timer = relaxTime;
-    counterTimer = relaxTime;
-    ctx.strokeStyle = '#3b99ff';
+    if (!isInitState) {
+      counterTimer = relaxTime;
+      ctx.strokeStyle = '#3b99ff';
+      isInitState = true;
+    }
 
-    timerIntervalId = setInterval(() => {
-     counterTimer = counterTimer - 0.05; 
-     timer = Math.ceil(counterTimer);
-     circle(relaxTime);
-     
-     isMomentForNextState();
-    }, 50);
+    counterTimer = counterTimer - 0.05; 
+    timer = counterTimer;
+    timerFormated = Math.round(timer, -5);
+    startRemaining();
+    circle(relaxTime);
+    
+console.log('relax after' + timer);
+console.log('counterTimer after' + counterTimer);
+    isMomentForNextState();
   };
 
   function isMomentForNextState() {
-    if (0 === timer) {
+    if (Math.abs(0 - timer) < 0.05) {
         counterTimer = 0;
-        clearInterval(timerIntervalId);
+        isInitState = false;
+        // clearInterval(timerIntervalId);
         if(remaining > 0) {
           if (cur_state === 'relax') {
             state.update(state => "work");
-            work();
+            // work();
           } else if (cur_state === 'work') {
             state.update(state => "relax");
-            relax();
+            // relax();
           }
+          // isInitState = false;
         }
     }
   }
   
   function startRemaining() {
-    startIntervalId = setInterval(() => {
       if (remaining <= 0) {
-        remaining = 0;
-          clearInterval(startIntervalId);
           stop();
       } else {
 
-        remaining = remaining - 0.1;
+        remaining = remaining - 0.05;
         progress.set( ((allTime - remaining) * 100 ) / allTime / 100);
       }
         
-    }, 100);
   };
 
   function stop() {
       timer = 0;
-      clearInterval(timerIntervalId);
+      clearInterval(flyInterval);
       
   }
 
