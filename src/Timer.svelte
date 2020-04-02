@@ -1,6 +1,6 @@
-{#if !remaining}
+{#if !sumTime && !preWorkTime}
 
-    <div class="settings-side" id="settings" class:tiny="{remaining}" transition:slide="{{delay: 250, duration: 1000,}}">
+    <div class="settings-side" id="settings"  transition:slide="{{delay: 250, duration: 1000,}}">
         <h2 transition:fade>Параметры</h2>
 
        <Textfield
@@ -54,12 +54,12 @@
 
         <div class="time-block  circle-height">
             {#if preWorkTime}
-                <p style="font-size: 0.5em" transition:slide="{{delay: 250, duration: 1000}}">Начинаем через </p>
-                <span transition:slide="{{delay: 250, duration: 1000}}">{preWorkTime}</span>
+                <p style="font-size: 0.5em" transition:slide="{{delay: 0, duration: 10}}">Начинаем через </p>
+                <span transition:slide="{{delay: 0, duration: 10}}">{preWorkTime}</span>
             {/if}
 
             {#if null !== timer}
-                <p transition:slide="{{delay: 250, duration: 1000}}">{timerFormated}</p>
+                <p transition:slide="{{delay: 0, duration: 10}}">{timerFormated}</p>
             {/if}
         </div>
     </div>
@@ -229,18 +229,22 @@
   let timerIntervalId;
 
   let flyInterval;
-  let isInitState = false;
+  let isInitState;
 
   let cur_state;
   let states;
 
   let canvas;
   let ctx;
-  let mobile = false;
+  let mobile;
 
   let circleWidth = 300;
   let circleHeight = 300;
   let lineWidth = 8;
+
+  let timerStep;
+  let sumTime = 0;
+  let curLap = 0;
 
   const unsubscribe = state.subscribe(value => {
     cur_state = value;
@@ -256,6 +260,8 @@
   	});
 
   $: allTime = (workTime + relaxTime) * laps - relaxTime;
+//  $: remaining = allTime - sumTime;
+
   $: hours = Math.floor(allTime / 60 / 60);
   $: minutes = Math.floor(allTime / 60) - hours * 60;
   $: seconds = Math.round(allTime % 60);
@@ -273,20 +279,22 @@
 
     flyInterval = setInterval(() => {
         fly();
-    }, 50);
+    }, timerStep * 1000);
  
   }
 
   function fly() {
     if (cur_state === 'preWork') {
       preWork();
+    } else {
+        sumTime += timerStep;
     }
 
-    if (cur_state === 'work') {
+    if (cur_state === states.work) {
       work();
     }
 
-    if (cur_state === 'relax') {
+    if (cur_state === states.relax) {
       relax();
     }
 
@@ -298,12 +306,16 @@
       // work();
     }
 
-    
+
   }
 
   function init() {
     preWorkTime = 3;
-    remaining = allTime;
+//    remaining = allTime;
+    timerStep = 0.01;
+    sumTime = 0;
+    isInitState = false;
+    mobile = false;
 
     canvas = document.getElementById('cv');
     canvas.width = circleWidth;
@@ -327,12 +339,8 @@
         preWorkTime--;
         if (0 === preWorkTime) {
           clearInterval(preWorktIntervalId);
-          // startRemaining();
-          setTimeout(()=>{
-            state.update(state => "work");
-            isInitState = false;
-          }, 1000)
-          
+          state.update(state => states.work);
+          isInitState = false;
         }
       }, 1000);
       isInitState = true;
@@ -341,78 +349,73 @@
   }
 
   function work() {
-    //timer = workTime;
-    console.log('work ' + timer);
     if (!isInitState) {
       counterTimer = 0;
       ctx.strokeStyle = '#ff7c20';
       isInitState = true;
+      curLap++;
     }
 
-    counterTimer = counterTimer + 0.05; 
-    // if (Math.trunc(workTime - counterTimer) === Math.round(workTime - counterTimer, -5)) {
+    counterTimer = counterTimer + timerStep;
     timer = workTime - counterTimer;
-    timerFormated = Math.round(timer, -5);
-    // }
-    startRemaining();
+    timerFormated = Math.round(timer, -3);
     circle(workTime);
-console.log('work after' + timer);
-console.log('counterTimer after' + counterTimer);
     isMomentForNextState();
   }
 
   function relax() {
-   // timer = relaxTime;
     if (!isInitState) {
       counterTimer = relaxTime;
       ctx.strokeStyle = '#3b99ff';
       isInitState = true;
     }
 
-    counterTimer = counterTimer - 0.05; 
+    counterTimer = counterTimer - timerStep;
     timer = counterTimer;
-    timerFormated = Math.round(timer, -5);
-    startRemaining();
+    timerFormated = Math.round(timer, -3);
     circle(relaxTime);
-    
-console.log('relax after' + timer);
-console.log('counterTimer after' + counterTimer);
     isMomentForNextState();
   };
 
   function isMomentForNextState() {
-    if (Math.abs(0 - timer) < 0.05) {
-        counterTimer = 0;
-        isInitState = false;
-        // clearInterval(timerIntervalId);
-        if(remaining > 0) {
-          if (cur_state === 'relax') {
-            state.update(state => "work");
-            // work();
-          } else if (cur_state === 'work') {
-            state.update(state => "relax");
-            // relax();
-          }
-          // isInitState = false;
+     if (stopping()) return;
+
+     if (cur_state === states.relax) {
+        if (Math.abs(sumTime - ((workTime + relaxTime) * curLap)) <= 0.01) {
+            state.update(state => states.work);
+            counterTimer = 0;
+            isInitState = false;
         }
-    }
+     }
+
+     if (cur_state === states.work) {
+        if (Math.abs(sumTime - ((workTime + relaxTime) * (curLap - 1) + workTime)) <= 0.01) {
+            state.update(state => states.relax);
+            counterTimer = 0;
+            isInitState = false;
+        }
+    //            console.log(sumTime - ((workTime + relaxTime) * (curLap - 1) + workTime));
+     }
   }
   
-  function startRemaining() {
+  function stopping() {
+      remaining = allTime - sumTime;
       if (remaining <= 0) {
           stop();
+          console.log('stop: sumTime: ' + sumTime );
+          return true;
       } else {
-
-        remaining = remaining - 0.05;
+        remaining = allTime - sumTime;
         progress.set( ((allTime - remaining) * 100 ) / allTime / 100);
+        return false
       }
         
   };
 
   function stop() {
       timer = 0;
+      sumTime = 0;
       clearInterval(flyInterval);
-      
   }
 
   function circle(timeValue) {
@@ -427,17 +430,4 @@ console.log('counterTimer after' + counterTimer);
     ctx.stroke();
   }
 
-
-  function rideUp(node, { duration }) {
-  		return {
-  			duration,
-  			css: t => {
-//  				const eased = elasticOut(t);
-
-  				return `
-  					transition: top 1s cubic-bezier(0, 0, 1, 1) 500ms;
-                    top: -1000px!important;`
-  			}
-  		};
-  	}
 </script>
