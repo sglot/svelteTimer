@@ -14,8 +14,8 @@
   import { crossfade } from "svelte/transition";
   import { flip } from "svelte/animate";
 
-  let workTime = 5;
-  let relaxTime = 5;
+  let workTime = 2;
+  let relaxTime = 2;
   let laps = 2;
 
   let preWorkTime = null;
@@ -86,14 +86,37 @@
   }
   
   function go(diff) {
+      real = (new Date().getTime() - startTime) ;
+            diff = real - ideal;
+      if (diff < -20) {
       flyInterval = setTimeout(() => {
-        fly();
-      }, (timerStep - diff)); 
+               go();
+             }, (timerStep - diff));
+      } else {
+       flyInterval = setTimeout(() => {
+         fly();
+       }, (timerStep - diff));
+      }
+
   } 
 
+  function sleep() {
+      real = (new Date().getTime() - startTime) ;
+      diff = real - ideal;
+      c('sleep diff: ' + (diff));
+      if (diff > -5) {
+          go(0);
+          c('---> out diff: ' + (diff));
+      } else {
+          let sleepId = setTimeout(() => {
+                   sleep();
+                   c('sleep');
+          }, (25));
+      }
+  }
 
   function fly() {
-    console.log("fly");
+//    console.log("fly");
     if (cur_state === "preWork") {
       preWork();
     } else {
@@ -156,6 +179,7 @@
           state.update(state => states.work);
           isInitState = false;
           startTime = new Date().getTime();
+          console.clear();
           go(diff);
         }
       }, 1000);
@@ -165,7 +189,7 @@
   }
 
   function work() {
-    console.log("work");
+//    console.log("work");
     if (!isInitState) {
       counterTimer = 0;
       ctx.strokeStyle = "#ff7c20";
@@ -181,7 +205,7 @@
   }
 
   function relax() {
-    console.log("relax");
+//    console.log("relax");
     if (!isInitState) {
       counterTimer = relaxTime;
       ctx.strokeStyle = "#3b99ff";
@@ -196,51 +220,47 @@
   }
 
   function isMomentForNextState() {
-    console.log("ismoment");
+//    console.log("ismoment");
     if (stopping()) return;
-
-real = (new Date().getTime() - startTime) ;
+     real = (new Date().getTime() - startTime) ;
       diff = real - ideal;
-      
-console.log("ismoment1");
     if (cur_state === states.relax) {
-      if (Math.abs((real) / 1000  - (workTime + relaxTime) * curLap) <= 0.01) {
+c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
+c("diff ->  " + (diff));
+      if (Math.abs((real) / 1000 - (workTime + relaxTime) * curLap) <= 0.01) {
+
         state.update(state => states.work);
         counterTimer = 0;
         isInitState = false;
+
+        c("relax -> work: " + (real / 1000 - (workTime + relaxTime) * curLap));
       }
       go(diff);
       return;
-      alert(1)
     }
 
-console.log("ismoment2222");
+
     if (cur_state === states.work) {
-      if (
-        Math.abs((real) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)) <= 0.01
-      ) {
+      if (Math.abs((real) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)) <= 0.01) {
         state.update(state => states.relax);
         counterTimer = 0;
         isInitState = false;
-        go(0);
-        return;
-        alert(2);
+        c("work -> relax: " + (real / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)));
+c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
+c("diff ->  " + (diff));
       }
-      console.log("ismoment3");
       go(diff);
     }
-
-    
-      //            console.log(sumTime - ((workTime + relaxTime) * (curLap - 1) + workTime));
-      
   }
 
   function stopping() {
-    console.log("stopppnig");
-    remaining = allTime - sumTime;
-    if (remaining <= 0) {
+//    console.log("stopppnig");
+real = (new Date().getTime() - startTime)
+    remaining = allTime - real / 1000;
+    if (remaining <= 0.001) {
       stop();
       console.log("stop: sumTime: " + sumTime);
+      console.log("stop: real: " + real / 1000);
       return true;
     } else {
       // remaining = allTime - sumTime;
@@ -258,7 +278,7 @@ console.log("ismoment2222");
   }
 
   function circle(timeValue) {
-    console.log("circle");
+//    console.log("circle");
     ctx.beginPath();
     ctx.clearRect(0, 0, circleWidth, circleHeight);
     let rad = (counterTimer * (180 / timeValue) * (Math.PI * 2)) / 180;
@@ -274,6 +294,10 @@ console.log("ismoment2222");
       false
     );
     ctx.stroke();
+  }
+
+  function c(mes) {
+      console.log(mes);
   }
 </script>
 
@@ -466,10 +490,10 @@ console.log("ismoment2222");
       <p>{states.relax}</p>
     </div>
   </div>
-  <p>start- {startTime}   sumTime- {sumTime}   remaining- {remaining}</p>
-  <p>real - {real}</p>
-  <p>ideal - {ideal}</p>
-  <p>diff - {diff}</p>
+  <p>start: {startTime}   sumTime: {sumTime}   remaining: {remaining}</p>
+  <p>real: {real}</p>
+  <p>ideal: {ideal}</p>
+  <p>diff: {diff}</p>
 
   <div class="common-block-data">
     <div class="common-block-data-list">
