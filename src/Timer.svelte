@@ -349,7 +349,7 @@ real = (new Date().getTime() - startTime)
     height: 300px;
     display: flex;
     justify-content: center;
-    font-size: 5em;
+    font-size: 3em;
     flex-flow: column;
   }
   .common-block-data {
@@ -375,10 +375,26 @@ real = (new Date().getTime() - startTime)
 
   .text--active {
     opacity: 1;
+    /*text-decoration: underline;*/
+        /*font-size: 1em;*/
+        transition-property: box-shadow;
+        transition-duration: 0.6s;
+        transition-timing-function: cubic-bezier(0, 0, 1, 1);
+
+
+       border: rgba(181,181,176,0.88) 0px solid;
+       border-radius: 50%;
+       /*box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);*/
+       box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 30px 1px -2px rgba(0, 0, 0, 0.2);
   }
 
   .text--disabled {
     opacity: 0.5;
+    /*font-size: 4em;*/
+    transition-property: opacity;
+    transition-duration: 0.6s;
+    transition-timing-function: cubic-bezier(0, 0, 1, 1);
+    border: white 0px solid;
   }
 
   progress {
@@ -457,15 +473,16 @@ real = (new Date().getTime() - startTime)
 
     <div
       class="time-block "
-      class:text--disabled={cur_state !== 'work'}
+      class:text--disabled={cur_state !== states.work}
+      class:text--active={cur_state === states.work}
       transition:fade>
       <p>{states.work}</p>
     </div>
 
     <div style="position: relative;" class=" circle-height">
-      <canvas class="clock-circle" width="0" id="cv" />
+      <canvas class="clock-circle text--active" width="0" id="cv" />
 
-      <div class="time-block circle-height">
+      <div class="time-block circle-height" >
         {#if preWorkTime}
           <p
             style="font-size: 0.5em"
@@ -485,7 +502,8 @@ real = (new Date().getTime() - startTime)
 
     <div
       class="time-block"
-      class:text--disabled={cur_state !== 'relax'}
+      class:text--disabled={cur_state !== states.relax}
+      class:text--active={cur_state === states.relax}
       transition:fade>
       <p>{states.relax}</p>
     </div>
