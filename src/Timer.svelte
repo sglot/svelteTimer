@@ -299,6 +299,15 @@ real = (new Date().getTime() - startTime)
   function c(mes) {
       console.log(mes);
   }
+
+  let error_boolean = false;
+  $: validateWorkTime = () => {
+      let str = workTime.toString();
+      let reg = /^[1-9]{1}(?!\d)$|^[1-6]{1}[0-9]{1}$/; // 1 цифра или 2 цифры (дял секунд от 1 до 60)
+c(reg.test(str));
+      return reg.test(str);
+
+  }
 </script>
 
 <style>
@@ -337,6 +346,17 @@ real = (new Date().getTime() - startTime)
     .circle-height {
       height: 150px !important;
     }
+
+    .settings-block-container {
+        flex-flow: column;
+    }
+
+    .settings-block--time {
+      font-size: 1em !important;
+      width: initial !important;
+      height: 2.3em !important;
+      height: 150px !important;
+    }
   }
 
   .settings-side {
@@ -352,6 +372,17 @@ real = (new Date().getTime() - startTime)
     font-size: 3em;
     flex-flow: column;
   }
+
+  .settings-block--time {
+    width: 300px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    font-size: 2em;
+    flex-flow: column;
+    margin: 0 2em;
+  }
+
   .common-block-data {
     display: flex;
     justify-content: flex-end;
@@ -367,16 +398,10 @@ real = (new Date().getTime() - startTime)
 
   .clock-circle {
     position: absolute;
-    /*top: 0;*/
-    /*left: 0;*/
-    /*width: 600px;*/
-    /*height: 600px;*/
   }
 
   .text--active {
     opacity: 1;
-    /*text-decoration: underline;*/
-        /*font-size: 1em;*/
         transition-property: box-shadow;
         transition-duration: 0.6s;
         transition-timing-function: cubic-bezier(0, 0, 1, 1);
@@ -413,6 +438,12 @@ real = (new Date().getTime() - startTime)
     justify-content: space-between;
   }
 
+  .settings-block-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
   input[type="number"] {
     display: none !important;
     font-size: 10em;
@@ -431,7 +462,7 @@ real = (new Date().getTime() - startTime)
     transition:slide={{ delay: 250, duration: 1000 }}>
     <h2 transition:fade>Параметры</h2>
 
-    <Textfield
+<!--    <Textfield
       type="number"
       input$min="0"
       input$max="60"
@@ -453,16 +484,62 @@ real = (new Date().getTime() - startTime)
       label="Время отдыха"
       input$aria-controls="helper-text-shaped-outlined-a"
       input$aria-describedby="helper-text-shaped-outlined-a" />
+-->
+
+  <div class="settings-block-container">
+
+    <div style="display: flex; flex-flow: column;">
+        <div
+          class="settings-block--time"
+          class:text--disabled={!validateWorkTime()}
+          class:text--active={validateWorkTime()}
+          transition:fade
+        >
+            <label style="font-size: 4em;">{workTime}</label>
+        </div>
+            <span style="width: 100%; margin-top: 1.5em;">Время нагрузки</span>
+          <input
+              type=range min=1 max=60
+              bind:value={workTime}
+
+              style="width: 90%; margin-top: 1.5em;"
+          />
+    </div>
+
+    <div style="display: flex; flex-flow: column;">
+        <div
+          class="settings-block--time"
+          class:text--disabled={!validateWorkTime()}
+          class:text--active={validateWorkTime()}
+          transition:fade
+        >
+            <label style="font-size: 4em; ">{relaxTime}</label>
+        </div>
+        <span style="width: 100%; margin-top: 1.5em;">Время отдыха</span>
+        <input
+              type=range min=1 max=60
+              bind:value={relaxTime}
+
+              style="width: 100%; margin-top: 1.5em;"
+          />
+      </div>
+    </div>
 
     <h3 class="status">Кругов: {laps}</h3>
 
     <label>
       <input type="range" bind:value={laps} min="1" max="10" />
     </label>
+    {#if error_boolean}
+        <h1> OH NO! AN ERRROR!</h1>
+      {/if}
 
-    <Button on:click={start} variant="unelevated">
+
+    <Button on:click={start} variant="unelevated" disabled="{!validateWorkTime()}">
       <Label>Старт</Label>
     </Button>
+
+
 
   </div>
 {/if}
@@ -476,7 +553,7 @@ real = (new Date().getTime() - startTime)
       class:text--disabled={cur_state !== states.work}
       class:text--active={cur_state === states.work}
       transition:fade>
-      <p>{states.work}</p>
+        <p>{states.work}</p>
     </div>
 
     <div style="position: relative;" class=" circle-height">
@@ -505,7 +582,7 @@ real = (new Date().getTime() - startTime)
       class:text--disabled={cur_state !== states.relax}
       class:text--active={cur_state === states.relax}
       transition:fade>
-      <p>{states.relax}</p>
+        <p>{states.relax}</p>
     </div>
   </div>
   <p>start: {startTime}   sumTime: {sumTime}   remaining: {remaining}</p>
