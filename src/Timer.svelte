@@ -112,9 +112,11 @@
   function init() {
     console.log("init");
     preWorkTime = 3;
-    //    remaining = allTime;
+    remaining = allTime;
     timerStep = 50;
     sumTime = 0;
+    counter = 0;
+    curLap = 0;
     isInitState = false;
     mobile = false;
     audio = new Sound(mute, '/sounds/sek.mp3');
@@ -150,9 +152,11 @@
 
         console.log(preWorkTime);
         preWorkTime--;
+        c('pre === ' + preWorkTime);
         if (0 === preWorkTime) {
           clearInterval(preWorktIntervalId);
-          state.update(state => states.work);
+          // state.update(state => states.work);
+          cur_state = states.work;
           isInitState = false;
           startTime = new Date().getTime();
           console.clear();
