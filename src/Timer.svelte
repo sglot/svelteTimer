@@ -5,6 +5,9 @@
   import Textfield from "@smui/textfield";
   import Button, { Label } from "@smui/button";
 
+  import { Sound } from "./core/Sound.js"; 
+  // import { engine } from "./core/engine.js"; 
+
   import { tweened } from "svelte/motion";
   import { cubicOut } from "svelte/easing";
   import { spring } from "svelte/motion";
@@ -23,6 +26,8 @@
   let timer = null;
   let timerFormated = null;
   let counterTimer = 0;
+  let mute = false; // global variable for class Sound too
+  let audio; // class Sound
 
   let startIntervalId;
   let preWorktIntervalId;
@@ -65,6 +70,11 @@
     easing: cubicOut
   });
 
+  let engine = {
+    "Нагрузка": () => {work()},
+    "Отдых": () => {relax()},
+  }
+
   $: allTime = (workTime + relaxTime) * laps - relaxTime;
   //  $: remaining = allTime - sumTime;
 
@@ -76,71 +86,27 @@
   $: rMinutes = Math.round(remaining / 60) - rHours * 60;
   $: rSeconds = Math.round(remaining % 60);
 
+
+
+
   function start() {
     init();
     cur_state = "preWork";
-    // remaining = allTime;
-    console.log("start");
-
     go(0);
-  }
-  
-  function go(diff) {
-      real = (new Date().getTime() - startTime) ;
-            diff = real - ideal;
-      if (diff < -20) {
-      flyInterval = setTimeout(() => {
-               go();
-             }, (timerStep - diff));
-      } else {
-       flyInterval = setTimeout(() => {
-         fly();
-       }, (timerStep - diff));
-      }
-
-  } 
-
-  function sleep() {
-      real = (new Date().getTime() - startTime) ;
-      diff = real - ideal;
-      c('sleep diff: ' + (diff));
-      if (diff > -5) {
-          go(0);
-          c('---> out diff: ' + (diff));
-      } else {
-          let sleepId = setTimeout(() => {
-                   sleep();
-                   c('sleep');
-          }, (25));
-      }
   }
 
   function fly() {
-//    console.log("fly");
+
     if (cur_state === "preWork") {
       preWork();
-    } else {
-      sumTime += timerStep / 1000;
-      counter++;
-      ideal = counter * timerStep;
-      
-    }
-// if (counter == 100) return;
-    if (cur_state === states.work) {
-      work();
-    }
+      return;
+    } 
 
-    if (cur_state === states.relax) {
-      relax();
-    }
+    sumTime += timerStep / 1000;
+    counter++;
+    ideal = counter * timerStep;
 
-    if (cur_state === "recovery") {
-      // work();
-    }
-
-    if (cur_state === "pause") {
-      // work();
-    }
+    engine[cur_state]();
   }
 
   function init() {
@@ -151,6 +117,9 @@
     sumTime = 0;
     isInitState = false;
     mobile = false;
+    audio = new Sound(mute, '/sounds/sek.mp3');
+    
+
 
     canvas = document.getElementById("cv");
     canvas.width = circleWidth;
@@ -171,7 +140,14 @@
     console.log("prework");
     // до начала 3,2,1...
     if (!isInitState) {
+      audio.replay();
+       
+
       preWorktIntervalId = setInterval(() => {
+        
+        audio.replay();
+         
+
         console.log(preWorkTime);
         preWorkTime--;
         if (0 === preWorkTime) {
@@ -180,6 +156,7 @@
           isInitState = false;
           startTime = new Date().getTime();
           console.clear();
+          audio.stop();
           go(diff);
         }
       }, 1000);
@@ -188,8 +165,34 @@
     }
   }
 
+
+
+var flag=0;
+  function go(d) {
+        if (flag) {c("d--- " + d); c("flag = 1 count -> " + counter);} else
+        if (d < 0) {
+          // sleep();
+        // если setTimeout задерживает на меньшее кол-во времени, 
+        // то задерживаем выполнение дополнительно на 
+
+        clearTimeout(flyInterval);
+
+        flyInterval = setTimeout(() => {
+                // flag =1;
+                c("target diff -> " + d);
+                c("target count -> " + counter);
+                go(0);
+              }, (d * (-1)));
+        } else {
+          flyInterval = setTimeout(() => {
+            fly();
+          }, (timerStep - d));
+        }
+
+    } 
+
   function work() {
-//    console.log("work");
+   console.log("work");
     if (!isInitState) {
       counterTimer = 0;
       ctx.strokeStyle = "#ff7c20";
@@ -200,8 +203,8 @@
     counterTimer = counterTimer + timerStep / 1000;
     timer = workTime - counterTimer;
     timerFormated = Math.round(timer, -3);
-    circle(workTime);
     isMomentForNextState();
+    
   }
 
   function relax() {
@@ -215,49 +218,64 @@
     counterTimer = counterTimer - timerStep / 1000;
     timer = counterTimer;
     timerFormated = Math.round(timer, -3);
-    circle(relaxTime);
     isMomentForNextState();
+    // circle(relaxTime);
   }
 
   function isMomentForNextState() {
 //    console.log("ismoment");
     if (stopping()) return;
-     real = (new Date().getTime() - startTime) ;
-      diff = real - ideal;
-    if (cur_state === states.relax) {
-c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
-c("diff ->  " + (diff));
-      if (Math.abs((real) / 1000 - (workTime + relaxTime) * curLap) <= 0.01) {
 
+    if (cur_state === states.relax) {
+      diff = getDiff();
+      c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
+      c("diff ->  " + (diff));
+      if (flag ==1 ) c("diff -> flag =1  ");
+
+      if (Math.abs((ideal) / 1000 - (workTime + relaxTime) * curLap) == 0) {
         state.update(state => states.work);
         counterTimer = 0;
         isInitState = false;
 
         c("relax -> work: " + (real / 1000 - (workTime + relaxTime) * curLap));
       }
+
+      circle(workTime);
+      
       go(diff);
       return;
     }
 
 
     if (cur_state === states.work) {
-      if (Math.abs((real) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)) <= 0.01) {
+      c("ideal ->  " + (ideal));
+      circle(relaxTime);
+      diff = getDiff();
+
+      if (Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)) == 0) {
         state.update(state => states.relax);
         counterTimer = 0;
         isInitState = false;
         c("work -> relax: " + (real / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)));
-c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
-c("diff ->  " + (diff));
+        c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
+        c("diff ->  " + (diff));
       }
+      
+      
       go(diff);
     }
   }
 
+  function getDiff() {
+    real = (new Date().getTime() - startTime) ;
+    return real - ideal;
+  }
+
   function stopping() {
 //    console.log("stopppnig");
-real = (new Date().getTime() - startTime)
-    remaining = allTime - real / 1000;
-    if (remaining <= 0.001) {
+// real = (new Date().getTime() - startTime)
+    remaining = allTime - ideal / 1000;
+    if (remaining == 0) {
       stop();
       console.log("stop: sumTime: " + sumTime);
       console.log("stop: real: " + real / 1000);
@@ -265,7 +283,6 @@ real = (new Date().getTime() - startTime)
     } else {
       // remaining = allTime - sumTime;
       progress.set(((allTime - remaining) * 100) / allTime / 100);
-
       return false;
     }
   }
@@ -275,6 +292,7 @@ real = (new Date().getTime() - startTime)
     timer = 0;
     sumTime = 0;
     clearInterval(flyInterval);
+    circle(workTime);
   }
 
   function circle(timeValue) {
@@ -298,6 +316,46 @@ real = (new Date().getTime() - startTime)
 
   function c(mes) {
       console.log(mes);
+  }
+
+  
+
+//   var engine = new function() {
+//     let funcs = [];
+
+//     this.push = function() {
+//         if (arguments.length == 1 && arguments[0] && arguments[0].name) 
+//             funcs[arguments[0].name] = arguments[0];
+//         console.log(arguments);
+//     }
+
+//     this.run = function(name) {
+//         // console.log(name);
+//         // console.log(name in funcs);
+//         // if (name && name in funcs) 
+//         //     return funcs[name]();
+//         // console.log(arguments);
+        
+//     }
+// };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+  function sleep() {
+      real = (new Date().getTime() - startTime) ;
+      diff = real - ideal;
+      c('sleep diff: ' + (diff));
+      if (diff > -5) {
+          go(0);
+          c('---> out diff: ' + (diff));
+      } else {
+          let sleepId = setTimeout(() => {
+                   sleep();
+                   c('sleep');
+          }, (25));
+      }
   }
 </script>
 
@@ -504,4 +562,11 @@ real = (new Date().getTime() - startTime)
     </div>
     <progress value={$progress} />
   </div>
+
+  <audio id="audio">
+    <!-- <source src="audio/music.ogg" type="audio/ogg; codecs=vorbis"> -->
+    <source src="/sounds/sek.mp3" type="audio/mpeg">
+    Тег audio не поддерживается вашим браузером. 
+    <!-- <a href="audio/music.mp3">Скачайте музыку</a>. -->
+  </audio>
 </div>
