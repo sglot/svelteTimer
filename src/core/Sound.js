@@ -1,5 +1,9 @@
 export class Sound {
     constructor(mute, src) {
+        console.log(mute);
+        console.log("================================================================================");
+        console.log((typeof mute === "boolean"));
+
         this.mute = mute;
         this.sound = new Audio();
         this.sound.preload = 'auto';

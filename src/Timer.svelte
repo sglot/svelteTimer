@@ -1,6 +1,8 @@
 <script>
   import { state } from "./stores/stores.js";
   import { stateList } from "./stores/stores.js";
+  import { mute } from "./stores/stores.js";
+  import { runAttempts } from "./stores/stores.js";
 
   import Textfield from "@smui/textfield";
   import Button, { Label } from "@smui/button";
@@ -26,7 +28,7 @@
   let timer = null;
   let timerFormated = null;
   let counterTimer = 0;
-  let mute = false; // global variable for class Sound too
+  // let mute = false; // global variable for class Sound too
   let audio; // class Sound
 
   let startIntervalId;
@@ -56,7 +58,7 @@
   let real = 0;
   let diff = 0;
   let counter = 0;
-
+  
   const unsubscribe = state.subscribe(value => {
     cur_state = value;
   });
@@ -119,7 +121,7 @@
     curLap = 0;
     isInitState = false;
     mobile = false;
-    audio = new Sound(mute, '/sounds/sek.mp3');
+    audio = new Sound($mute, '/sounds/sek.mp3');
     
 
 
@@ -244,7 +246,7 @@ var flag=0;
         c("relax -> work: " + (real / 1000 - (workTime + relaxTime) * curLap));
       }
 
-      circle(workTime);
+      circle(relaxTime);
       
       go(diff);
       return;
@@ -253,7 +255,7 @@ var flag=0;
 
     if (cur_state === states.work) {
       c("ideal ->  " + (ideal));
-      circle(relaxTime);
+      circle(workTime);
       diff = getDiff();
 
       if (Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)) == 0) {
@@ -297,6 +299,14 @@ var flag=0;
     sumTime = 0;
     clearInterval(flyInterval);
     circle(workTime);
+    
+    runAttempts.set(
+                      Number.parseInt(
+                                        localStorage.getItem('runAttempts')
+                                      ) 
+                      + 1 );
+
+    localStorage.setItem('runAttempts', $runAttempts);
   }
 
   function circle(timeValue) {
