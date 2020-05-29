@@ -6,4 +6,5 @@ var list = {
     pause: 'Пауза',
     end: 'Конец'
 };
+
 export const state = writable('settings'), stateList = writable(list);
