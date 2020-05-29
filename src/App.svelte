@@ -1,7 +1,7 @@
 <script>
     import Button from '@smui/button';
     import Timer from './Timer.svelte';
-
+	import Info from './Info.svelte';
     let showTimer = true;
 
     export let name;
@@ -9,6 +9,7 @@
 </script>
 
 <main>
+	<Info/>
 
 	<p>Svelte Timer. Powered by "Chto, opyat?"</p>
 	<Button on:click={() => {showTimer = !showTimer;}}>{name} click</Button>

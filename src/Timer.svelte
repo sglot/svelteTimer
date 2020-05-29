@@ -112,9 +112,11 @@
   function init() {
     console.log("init");
     preWorkTime = 3;
-    //    remaining = allTime;
+    remaining = allTime;
     timerStep = 50;
     sumTime = 0;
+    counter = 0;
+    curLap = 0;
     isInitState = false;
     mobile = false;
     audio = new Sound(mute, '/sounds/sek.mp3');
@@ -150,9 +152,11 @@
 
         console.log(preWorkTime);
         preWorkTime--;
+        c('pre === ' + preWorkTime);
         if (0 === preWorkTime) {
           clearInterval(preWorktIntervalId);
-          state.update(state => states.work);
+          // state.update(state => states.work);
+          cur_state = states.work;
           isInitState = false;
           startTime = new Date().getTime();
           console.clear();
@@ -318,44 +322,13 @@ var flag=0;
       console.log(mes);
   }
 
-  
+  let error_boolean = false;
+  $: validateWorkTime = () => {
+      let str = workTime.toString();
+      let reg = /^[1-9]{1}(?!\d)$|^[1-6]{1}[0-9]{1}$/; // 1 цифра или 2 цифры (дял секунд от 1 до 60)
+c(reg.test(str));
+      return reg.test(str);
 
-//   var engine = new function() {
-//     let funcs = [];
-
-//     this.push = function() {
-//         if (arguments.length == 1 && arguments[0] && arguments[0].name) 
-//             funcs[arguments[0].name] = arguments[0];
-//         console.log(arguments);
-//     }
-
-//     this.run = function(name) {
-//         // console.log(name);
-//         // console.log(name in funcs);
-//         // if (name && name in funcs) 
-//         //     return funcs[name]();
-//         // console.log(arguments);
-        
-//     }
-// };
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-  function sleep() {
-      real = (new Date().getTime() - startTime) ;
-      diff = real - ideal;
-      c('sleep diff: ' + (diff));
-      if (diff > -5) {
-          go(0);
-          c('---> out diff: ' + (diff));
-      } else {
-          let sleepId = setTimeout(() => {
-                   sleep();
-                   c('sleep');
-          }, (25));
-      }
   }
 </script>
 
@@ -395,6 +368,17 @@ var flag=0;
     .circle-height {
       height: 150px !important;
     }
+
+    .settings-block-container {
+        flex-flow: column;
+    }
+
+    .settings-block--time {
+      font-size: 1em !important;
+      width: initial !important;
+      height: 2.3em !important;
+      height: 150px !important;
+    }
   }
 
   .settings-side {
@@ -407,9 +391,20 @@ var flag=0;
     height: 300px;
     display: flex;
     justify-content: center;
-    font-size: 5em;
+    font-size: 3em;
     flex-flow: column;
   }
+
+  .settings-block--time {
+    width: 300px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    font-size: 2em;
+    flex-flow: column;
+    margin: 0 2em;
+  }
+
   .common-block-data {
     display: flex;
     justify-content: flex-end;
@@ -425,18 +420,28 @@ var flag=0;
 
   .clock-circle {
     position: absolute;
-    /*top: 0;*/
-    /*left: 0;*/
-    /*width: 600px;*/
-    /*height: 600px;*/
   }
 
   .text--active {
     opacity: 1;
+        transition-property: box-shadow;
+        transition-duration: 0.6s;
+        transition-timing-function: cubic-bezier(0, 0, 1, 1);
+
+
+       border: rgba(181,181,176,0.88) 0px solid;
+       border-radius: 50%;
+       /*box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);*/
+       box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 30px 1px -2px rgba(0, 0, 0, 0.2);
   }
 
   .text--disabled {
     opacity: 0.5;
+    /*font-size: 4em;*/
+    transition-property: opacity;
+    transition-duration: 0.6s;
+    transition-timing-function: cubic-bezier(0, 0, 1, 1);
+    border: white 0px solid;
   }
 
   progress {
@@ -453,6 +458,12 @@ var flag=0;
     position: relative;
     display: flex;
     justify-content: space-between;
+  }
+
+  .settings-block-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
   }
 
   input[type="number"] {
@@ -473,7 +484,7 @@ var flag=0;
     transition:slide={{ delay: 250, duration: 1000 }}>
     <h2 transition:fade>Параметры</h2>
 
-    <Textfield
+<!--    <Textfield
       type="number"
       input$min="0"
       input$max="60"
@@ -495,16 +506,62 @@ var flag=0;
       label="Время отдыха"
       input$aria-controls="helper-text-shaped-outlined-a"
       input$aria-describedby="helper-text-shaped-outlined-a" />
+-->
+
+  <div class="settings-block-container">
+
+    <div style="display: flex; flex-flow: column;">
+        <div
+          class="settings-block--time"
+          class:text--disabled={!validateWorkTime()}
+          class:text--active={validateWorkTime()}
+          transition:fade
+        >
+            <label style="font-size: 4em;">{workTime}</label>
+        </div>
+            <span style="width: 100%; margin-top: 1.5em;">Время нагрузки</span>
+          <input
+              type=range min=1 max=60
+              bind:value={workTime}
+
+              style="width: 90%; margin-top: 1.5em;"
+          />
+    </div>
+
+    <div style="display: flex; flex-flow: column;">
+        <div
+          class="settings-block--time"
+          class:text--disabled={!validateWorkTime()}
+          class:text--active={validateWorkTime()}
+          transition:fade
+        >
+            <label style="font-size: 4em; ">{relaxTime}</label>
+        </div>
+        <span style="width: 100%; margin-top: 1.5em;">Время отдыха</span>
+        <input
+              type=range min=1 max=60
+              bind:value={relaxTime}
+
+              style="width: 100%; margin-top: 1.5em;"
+          />
+      </div>
+    </div>
 
     <h3 class="status">Кругов: {laps}</h3>
 
     <label>
       <input type="range" bind:value={laps} min="1" max="10" />
     </label>
+    {#if error_boolean}
+        <h1> OH NO! AN ERRROR!</h1>
+      {/if}
 
-    <Button on:click={start} variant="unelevated">
+
+    <Button on:click={start} variant="unelevated" disabled="{!validateWorkTime()}">
       <Label>Старт</Label>
     </Button>
+
+
 
   </div>
 {/if}
@@ -515,15 +572,16 @@ var flag=0;
 
     <div
       class="time-block "
-      class:text--disabled={cur_state !== 'work'}
+      class:text--disabled={cur_state !== states.work}
+      class:text--active={cur_state === states.work}
       transition:fade>
-      <p>{states.work}</p>
+        <p>{states.work}</p>
     </div>
 
     <div style="position: relative;" class=" circle-height">
-      <canvas class="clock-circle" width="0" id="cv" />
+      <canvas class="clock-circle text--active" width="0" id="cv" />
 
-      <div class="time-block circle-height">
+      <div class="time-block circle-height" >
         {#if preWorkTime}
           <p
             style="font-size: 0.5em"
@@ -543,9 +601,10 @@ var flag=0;
 
     <div
       class="time-block"
-      class:text--disabled={cur_state !== 'relax'}
+      class:text--disabled={cur_state !== states.relax}
+      class:text--active={cur_state === states.relax}
       transition:fade>
-      <p>{states.relax}</p>
+        <p>{states.relax}</p>
     </div>
   </div>
   <p>start: {startTime}   sumTime: {sumTime}   remaining: {remaining}</p>
