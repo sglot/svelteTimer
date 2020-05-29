@@ -56,6 +56,8 @@
   let real = 0;
   let diff = 0;
   let counter = 0;
+  let firstStart = true;
+  let el;
 
   const unsubscribe = state.subscribe(value => {
     cur_state = value;
@@ -117,25 +119,39 @@
     sumTime = 0;
     counter = 0;
     curLap = 0;
+    timer = null;
     isInitState = false;
     mobile = false;
     audio = new Sound(mute, '/sounds/sek.mp3');
-    
 
+
+    if (!firstStart) {
+        return;
+    }
 
     canvas = document.getElementById("cv");
     canvas.width = circleWidth;
     canvas.height = circleWidth;
     ctx = canvas.getContext("2d");
-    canvas.style.left = 0 + "px";
 
-    if (window.innerWidth < 400) {
+    if (window.innerWidth < 290) {
+      mobile = true;
+      circleWidth = circleHeight = circleWidth / 2.5;
+      lineWidth /= 2.5;
+      canvas.width = canvas.height = circleWidth;
+    } else if (window.innerWidth < 400) {
       mobile = true;
       circleWidth = circleHeight = circleWidth / 2;
       lineWidth /= 2;
       canvas.width = canvas.height = circleWidth;
-      canvas.style.left = canvas.offsetLeft - canvas.width / 2 + "px";
+      // height == width
+      // в стилях для мобилки width = initial, поэтому берём высоту
+//      canvas.style.left =  canvas.height / 2 - canvas.offsetLeft + "px";
+    } else {
+        canvas.style.left = 0 + "px";
     }
+
+    firstStart = false;
   }
 
   function preWork() {
@@ -281,6 +297,7 @@ var flag=0;
     remaining = allTime - ideal / 1000;
     if (remaining == 0) {
       stop();
+      progress.set(1);
       console.log("stop: sumTime: " + sumTime);
       console.log("stop: real: " + real / 1000);
       return true;
@@ -296,7 +313,17 @@ var flag=0;
     timer = 0;
     sumTime = 0;
     clearInterval(flyInterval);
+    ctx.strokeStyle = "#00b60a";
     circle(workTime);
+    state.update(state => states.end);
+
+
+    if (mobile) {
+        setTimeout(()=>{
+            document.getElementById("btn_start").scrollIntoView({behavior: "smooth"});
+        }, 1000);
+    }
+
   }
 
   function circle(timeValue) {
@@ -352,9 +379,10 @@ c(reg.test(str));
 
   @media screen and (max-width: 479px) {
     .time-block {
-      font-size: 2em !important;
-      width: 100% !important;
-      height: 2.3em !important;
+      font-size: 1.5em !important;
+      width: initial !important;
+      height: 150px !important;
+      margin: 0 2em;
     }
 
     .clock-common {
@@ -367,6 +395,9 @@ c(reg.test(str));
 
     .circle-height {
       height: 150px !important;
+      display: flex;
+      justify-content: center;
+      /*margin: 2em 0em;*/
     }
 
     .settings-block-container {
@@ -379,7 +410,46 @@ c(reg.test(str));
       height: 2.3em !important;
       height: 150px !important;
     }
+
   }
+
+  @media screen and (max-width: 290px) {
+      .time-block {
+        font-size: 1.2em !important;
+        width: initial !important;
+        height: 120px !important;
+        margin: 0 2em;
+      }
+
+      .clock-common {
+        flex-flow: column;
+      }
+
+      .common-block-data {
+        font-size: 0.5em;
+      }
+
+      .circle-height {
+        height: 120px !important;
+        display: flex;
+        justify-content: center;
+        /*margin: 2em 0em;*/
+      }
+
+      .settings-block-container {
+          flex-flow: column;
+      }
+
+      .settings-block--time {
+        font-size: 0.8em !important;
+        width: initial !important;
+        height: 120px !important;
+      }
+
+      .text--active {
+           box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 15px 1px -2px rgba(0, 0, 0, 0.2) !important;
+      }
+    }
 
   .settings-side {
     position: relative;
@@ -393,7 +463,10 @@ c(reg.test(str));
     justify-content: center;
     font-size: 3em;
     flex-flow: column;
+
   }
+
+
 
   .settings-block--time {
     width: 300px;
@@ -402,7 +475,7 @@ c(reg.test(str));
     justify-content: center;
     font-size: 2em;
     flex-flow: column;
-    margin: 0 2em;
+    margin: 0 3em;
   }
 
   .common-block-data {
@@ -481,7 +554,12 @@ c(reg.test(str));
   <div
     class="settings-side"
     id="settings"
-    transition:slide={{ delay: 250, duration: 1000 }}>
+    transition:slide={
+        mobile
+        ? { delay: 0, duration: 0 }
+        : { delay: 250, duration: 1000 }
+    }
+  >
     <h2 transition:fade>Параметры</h2>
 
 <!--    <Textfield
@@ -557,7 +635,12 @@ c(reg.test(str));
       {/if}
 
 
-    <Button on:click={start} variant="unelevated" disabled="{!validateWorkTime()}">
+    <div id="btn_start"></div>
+    <Button
+        on:click =  {start}
+        variant =   "unelevated"
+        disabled =  "{!validateWorkTime()}"
+    >
       <Label>Старт</Label>
     </Button>
 
@@ -570,42 +653,44 @@ c(reg.test(str));
 
   <div class="clock-common">
 
-    <div
-      class="time-block "
-      class:text--disabled={cur_state !== states.work}
-      class:text--active={cur_state === states.work}
-      transition:fade>
-        <p>{states.work}</p>
-    </div>
+        <div
+          class="time-block "
+          class:text--disabled={cur_state !== states.work}
+          class:text--active={cur_state === states.work}
+          transition:fade>
+            <p>{states.work}</p>
+        </div>
 
-    <div style="position: relative;" class=" circle-height">
-      <canvas class="clock-circle text--active" width="0" id="cv" />
+        <div style="position: relative;" class=" circle-height">
+          <canvas class="clock-circle text--active" width="0" id="cv" />
 
-      <div class="time-block circle-height" >
-        {#if preWorkTime}
-          <p
-            style="font-size: 0.5em"
-            transition:slide={{ delay: 0, duration: 10 }}>
-            Начинаем через
-          </p>
-          <span transition:slide={{ delay: 0, duration: 10 }}>
-            {preWorkTime}
-          </span>
-        {/if}
+          <div class="time-block circle-height" >
+            {#if preWorkTime}
+              <p
+                style="font-size: 0.5em"
+                transition:slide={{ delay: 0, duration: 10 }}>
+                Начинаем через
+              </p>
+              <span transition:slide={{ delay: 0, duration: 10 }}>
+                {preWorkTime}
+              </span>
+            {/if}
 
-        {#if null !== timer}
-          <p transition:slide={{ delay: 0, duration: 10 }}>{timerFormated}</p>
-        {/if}
-      </div>
-    </div>
+            {#if null !== timer}
+              <p transition:slide={{ delay: 0, duration: 10 }}>{timerFormated}</p>
+            {/if}
+          </div>
+        </div>
 
-    <div
-      class="time-block"
-      class:text--disabled={cur_state !== states.relax}
-      class:text--active={cur_state === states.relax}
-      transition:fade>
-        <p>{states.relax}</p>
-    </div>
+
+        <div
+          class="time-block"
+          class:text--disabled={cur_state !== states.relax}
+          class:text--active={cur_state === states.relax}
+          transition:fade>
+            <p>{states.relax}</p>
+        </div>
+
   </div>
   <p>start: {startTime}   sumTime: {sumTime}   remaining: {remaining}</p>
   <p>real: {real}</p>
