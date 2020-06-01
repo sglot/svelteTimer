@@ -23,6 +23,9 @@
   let relaxTime = 2;
   let laps = 2;
 
+  const maxInnerLap = 3;
+  let curInnerLap = 1;
+
   let preWorkTime = null;
   let remaining = null;
   let timer = null;
@@ -51,7 +54,7 @@
 
   let timerStep;
   let sumTime = 0;
-  let curLap = 0;
+  let curOuterLap = 0;
 
   let startTime;
   let ideal = 0;
@@ -76,9 +79,10 @@
   let engine = {
     "Нагрузка": () => {work()},
     "Отдых": () => {relax()},
-  }
+  };
 
-  $: allTime = (workTime + relaxTime) * laps - relaxTime;
+
+  $: allTime = (workTime + relaxTime) * laps * maxInnerLap - relaxTime;
   //  $: remaining = allTime - sumTime;
 
   $: hours = Math.floor(allTime / 60 / 60);
@@ -105,7 +109,8 @@
       timerStep = 50;
       sumTime = 0;
       counter = 0;
-      curLap = 0;
+      curInnerLap = 1;
+      curOuterLap = 0;
       timer = null;
       isInitState = false;
       mobile = false;
@@ -204,7 +209,7 @@
       counterTimer = 0;
       ctx.strokeStyle = "#ff7c20";
       isInitState = true;
-      curLap++;
+      curOuterLap++;
     }
 
     counterTimer = counterTimer + timerStep / 1000;
@@ -237,12 +242,12 @@
     let stateTime = 0;
 
     if (cur_state === states.relax) {
-      balance = Math.abs((ideal) / 1000 - (workTime + relaxTime) * curLap);
+      balance = Math.abs((ideal) / 1000 - (workTime + relaxTime) * curOuterLap);
       nextState = states.work;
     }
 
     if (cur_state === states.work) {
-      balance = Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime));
+      balance = Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curOuterLap - 1) + workTime));
       nextState = states.relax;
     }
 
@@ -258,6 +263,13 @@
       counterTimer = 0;
       isInitState = false;
       audio.stop();
+      if (nextState === states.work) {
+          if (curInnerLap === maxInnerLap) {
+            curInnerLap = 1;
+          } else {
+            curInnerLap++;
+          }
+      }
     }
 
     go(getDiff());
@@ -270,6 +282,7 @@
 
   function stopping() {
     remaining = allTime - ideal / 1000;
+
     if (remaining == 0) {
       stop();
       progress.set(1);
@@ -674,6 +687,8 @@
   <p>real: {real}</p>
   <p>ideal: {ideal}</p>
   <p>diff: {diff}</p>
+  <br>
+  <p>lap: {curInnerLap}</p>
 
   <div class="common-block-data">
     <div class="common-block-data-list">
