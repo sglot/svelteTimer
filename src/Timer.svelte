@@ -146,15 +146,14 @@
     if (!isInitState) {
       audio.replay();
        
-
       preWorktIntervalId = setInterval(() => {
         
-        audio.replay();
-         
+        audio.replay();      
 
         console.log(preWorkTime);
         preWorkTime--;
         c('pre === ' + preWorkTime);
+
         if (0 === preWorkTime) {
           clearInterval(preWorktIntervalId);
           // state.update(state => states.work);
@@ -173,22 +172,20 @@
 
 
 
-var flag=0;
+  var flag=0;
   function go(d) {
         if (flag) {c("d--- " + d); c("flag = 1 count -> " + counter);} else
         if (d < 0) {
           // sleep();
         // если setTimeout задерживает на меньшее кол-во времени, 
         // то задерживаем выполнение дополнительно на 
-
-        clearTimeout(flyInterval);
-
-        flyInterval = setTimeout(() => {
-                // flag =1;
-                c("target diff -> " + d);
-                c("target count -> " + counter);
-                go(0);
-              }, (d * (-1)));
+          clearTimeout(flyInterval);
+          flyInterval = setTimeout(() => {
+            // flag =1;
+            c("target diff -> " + d);
+            c("target count -> " + counter);
+            go(0);
+          }, (d * (-1)));
         } else {
           flyInterval = setTimeout(() => {
             fly();
@@ -198,7 +195,7 @@ var flag=0;
     } 
 
   function work() {
-   console.log("work");
+  // console.log("work");
     if (!isInitState) {
       counterTimer = 0;
       ctx.strokeStyle = "#ff7c20";
@@ -229,47 +226,40 @@ var flag=0;
   }
 
   function isMomentForNextState() {
-//    console.log("ismoment");
+
     if (stopping()) return;
 
+    let balance = 0;
+    let nextState = 'new';
+    let stateTime = 0;
+
     if (cur_state === states.relax) {
-      diff = getDiff();
-      c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
-      c("diff ->  " + (diff));
-      if (flag ==1 ) c("diff -> flag =1  ");
-
-      if (Math.abs((ideal) / 1000 - (workTime + relaxTime) * curLap) == 0) {
-        state.update(state => states.work);
-        counterTimer = 0;
-        isInitState = false;
-
-        c("relax -> work: " + (real / 1000 - (workTime + relaxTime) * curLap));
-      }
-
-      circle(relaxTime);
-      
-      go(diff);
-      return;
+      balance = Math.abs((ideal) / 1000 - (workTime + relaxTime) * curLap);
+      nextState = states.work;
     }
 
-
-    if (cur_state === states.work) {
-      c("ideal ->  " + (ideal));
-      circle(workTime);
-      diff = getDiff();
-
-      if (Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)) == 0) {
-        state.update(state => states.relax);
-        counterTimer = 0;
-        isInitState = false;
-        c("work -> relax: " + (real / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)));
-        c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
-        c("diff ->  " + (diff));
-      }
-      
-      
-      go(diff);
+    if (cur_state === states.work) { 
+      balance = Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime));
+      nextState = states.relax;
     }
+
+    circle(stateTime = cur_state === states.work ? workTime : relaxTime);
+
+    if ((balance <= 6 && stateTime > 10) || (balance <= 3 && stateTime > 5 && stateTime <= 10)) {
+      if (balance%1<0.5) {audio.replay();} else {audio.stop();}
+     
+    }
+  
+    
+
+    if (balance === 0) {
+      state.update(state => nextState);
+      counterTimer = 0;
+      isInitState = false;
+      audio.stop();
+    }
+
+    go(getDiff());
   }
 
   function getDiff() {
@@ -278,16 +268,11 @@ var flag=0;
   }
 
   function stopping() {
-//    console.log("stopppnig");
-// real = (new Date().getTime() - startTime)
     remaining = allTime - ideal / 1000;
     if (remaining == 0) {
       stop();
-      console.log("stop: sumTime: " + sumTime);
-      console.log("stop: real: " + real / 1000);
       return true;
     } else {
-      // remaining = allTime - sumTime;
       progress.set(((allTime - remaining) * 100) / allTime / 100);
       return false;
     }
@@ -297,6 +282,7 @@ var flag=0;
     console.log("stop");
     timer = 0;
     sumTime = 0;
+    audio.stop();
     clearInterval(flyInterval);
     circle(workTime);
     
@@ -310,7 +296,7 @@ var flag=0;
   }
 
   function circle(timeValue) {
-//    console.log("circle");
+  //    console.log("circle");
     ctx.beginPath();
     ctx.clearRect(0, 0, circleWidth, circleHeight);
     let rad = (counterTimer * (180 / timeValue) * (Math.PI * 2)) / 180;
@@ -336,7 +322,7 @@ var flag=0;
   $: validateWorkTime = () => {
       let str = workTime.toString();
       let reg = /^[1-9]{1}(?!\d)$|^[1-6]{1}[0-9]{1}$/; // 1 цифра или 2 цифры (дял секунд от 1 до 60)
-c(reg.test(str));
+      c(reg.test(str));
       return reg.test(str);
 
   }

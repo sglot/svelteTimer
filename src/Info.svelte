@@ -1,6 +1,13 @@
 <div class="info-header">
 		<span>v. 0.2 | </span>
-		<span>Запуск {$runAttempts} | </span>
+		<span>Запуск 
+            <span 
+                style="text-decoration:underline steelblue"
+                on:click={changeMute}
+            >
+                {$runAttempts} | 
+            </span>
+        </span>
 		<span>Звук 
             <span 
                 style="text-decoration:underline double steelblue"

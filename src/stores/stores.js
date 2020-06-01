@@ -11,5 +11,5 @@ export
     const 
         state = writable('settings'), 
         stateList = writable(list),
-        runAttempts = writable(null),
+        runAttempts = writable(0),
         mute = writable(false);
