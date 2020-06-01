@@ -94,13 +94,73 @@
 
   function start() {
     init();
-    cur_state = "preWork";
+    cur_state = states.countdown;
     go(0);
   }
 
-  function fly() {
+  function init() {
+      console.log("init");
+      preWorkTime = 3;
+      remaining = allTime;
+      timerStep = 50;
+      sumTime = 0;
+      counter = 0;
+      curLap = 0;
+      timer = null;
+      isInitState = false;
+      mobile = false;
+      audio = new Sound($mute, '/sounds/sek.mp3');
 
-    if (cur_state === "preWork") {
+
+      if (!firstStart) {
+          return;
+      }
+
+      canvas = document.getElementById("cv");
+      canvas.width = circleWidth;
+      canvas.height = circleWidth;
+      ctx = canvas.getContext("2d");
+      canvas.style.left = 0 + "px";
+
+      if (window.innerWidth < 290) {
+        mobile = true;
+        circleWidth = circleHeight = circleWidth / 2.5;
+        lineWidth /= 2.5;
+        canvas.width = canvas.height = circleWidth;
+      } else if (window.innerWidth < 479) {
+        mobile = true;
+        circleWidth = circleHeight = circleWidth / 2;
+        lineWidth /= 2;
+        canvas.width = canvas.height = circleWidth;
+        // height == width
+        // в стилях для мобилки width = initial, поэтому берём высоту
+  //      canvas.style.left =  canvas.height / 2 - canvas.offsetLeft + "px";
+      } else {
+          canvas.style.left = 0 + "px";
+      }
+      firstStart = false;
+  }
+
+    function go(d) {
+      if (d < 0) {
+        // sleep();
+      // если setTimeout задерживает на меньшее кол-во времени,
+      // то задерживаем выполнение дополнительно на
+        clearTimeout(flyInterval);
+        flyInterval = setTimeout(() => {
+          c("target diff -> " + d);
+          c("target count -> " + counter);
+          go(0);
+        }, (d * (-1)));
+      } else {
+        flyInterval = setTimeout(() => {
+          fly();
+        }, (timerStep - d));
+      }
+    }
+
+  function fly() {
+    if (cur_state === states.countdown) {
       preWork();
       return;
     } 
@@ -112,63 +172,15 @@
     engine[cur_state]();
   }
 
-  function init() {
-    console.log("init");
-    preWorkTime = 3;
-    remaining = allTime;
-    timerStep = 50;
-    sumTime = 0;
-    counter = 0;
-    curLap = 0;
-    timer = null;
-    isInitState = false;
-    mobile = false;
-    audio = new Sound($mute, '/sounds/sek.mp3');
-    
-
-    if (!firstStart) {
-        return;
-    }
-
-    canvas = document.getElementById("cv");
-    canvas.width = circleWidth;
-    canvas.height = circleWidth;
-    ctx = canvas.getContext("2d");
-    canvas.style.left = 0 + "px";
-
-    if (window.innerWidth < 290) {
-      mobile = true;
-      circleWidth = circleHeight = circleWidth / 2.5;
-      lineWidth /= 2.5;
-      canvas.width = canvas.height = circleWidth;
-    } else if (window.innerWidth < 400) {
-      mobile = true;
-      circleWidth = circleHeight = circleWidth / 2;
-      lineWidth /= 2;
-      canvas.width = canvas.height = circleWidth;
-      // height == width
-      // в стилях для мобилки width = initial, поэтому берём высоту
-//      canvas.style.left =  canvas.height / 2 - canvas.offsetLeft + "px";
-    } else {
-        canvas.style.left = 0 + "px";
-    }
-
-    firstStart = false;
-  }
-
   function preWork() {
-    console.log("prework");
+    console.log("prework states.countdown");
     // до начала 3,2,1...
     if (!isInitState) {
       audio.replay();
 
       preWorktIntervalId = setInterval(() => {
-        
         audio.replay();
-
-        console.log(preWorkTime);
         preWorkTime--;
-        c('pre === ' + preWorkTime);
 
         if (0 === preWorkTime) {
           clearInterval(preWorktIntervalId);
@@ -186,30 +198,6 @@
     }
   }
 
-
-
-  var flag=0;
-  function go(d) {
-        if (flag) {c("d--- " + d); c("flag = 1 count -> " + counter);} else
-        if (d < 0) {
-          // sleep();
-        // если setTimeout задерживает на меньшее кол-во времени, 
-        // то задерживаем выполнение дополнительно на 
-          clearTimeout(flyInterval);
-          flyInterval = setTimeout(() => {
-            // flag =1;
-            c("target diff -> " + d);
-            c("target count -> " + counter);
-            go(0);
-          }, (d * (-1)));
-        } else {
-          flyInterval = setTimeout(() => {
-            fly();
-          }, (timerStep - d));
-        }
-
-    } 
-
   function work() {
   // console.log("work");
     if (!isInitState) {
@@ -223,7 +211,6 @@
     timer = workTime - counterTimer;
     timerFormated = Math.round(timer, -3);
     isMomentForNextState();
-    
   }
 
   function relax() {
@@ -265,8 +252,6 @@
       if (balance%1<0.5) {audio.replay();} else {audio.stop();}
 
     }
-
-
 
     if (balance === 0) {
       state.update(state => nextState);
@@ -373,12 +358,12 @@
   @media (min-width: 640px) {
   }
 
-  @media screen and (max-width: 479px) {
+  @media screen and (min-width: 291px) and (max-width: 479px) {
     .time-block {
       font-size: 1.5em !important;
-      width: initial !important;
+      width: 150px !important;
       height: 150px !important;
-      margin: 0 2em;
+      margin: 0 auto;
     }
 
     .clock-common {
@@ -391,9 +376,8 @@
 
     .circle-height {
       height: 150px !important;
-      display: flex;
-      justify-content: center;
-      /*margin: 2em 0em;*/
+      margin: 0 auto;
+      width: 150px;
     }
 
     .settings-block-container {
@@ -402,9 +386,9 @@
 
     .settings-block--time {
       font-size: 1em !important;
-      width: initial !important;
-      height: 2.3em !important;
+      width: 150px !important;
       height: 150px !important;
+      margin: 0 auto !important;
     }
 
   }
@@ -412,9 +396,9 @@
   @media screen and (max-width: 290px) {
       .time-block {
         font-size: 1.2em !important;
-        width: initial !important;
+        width: 120px !important;
         height: 120px !important;
-        margin: 0 2em;
+        margin: 0 auto;
       }
 
       .clock-common {
@@ -427,9 +411,9 @@
 
       .circle-height {
         height: 120px !important;
-        display: flex;
-        justify-content: center;
-        /*margin: 2em 0em;*/
+        max-width: 120px;
+        margin: 0 auto;
+        min-width: 120px !important;
       }
 
       .settings-block-container {
@@ -438,8 +422,9 @@
 
       .settings-block--time {
         font-size: 0.8em !important;
-        width: initial !important;
+        width: 120px !important;
         height: 120px !important;
+        margin: 0 auto !important;
       }
 
       .text--active {

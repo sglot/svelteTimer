@@ -1,6 +1,7 @@
 import {writable} from 'svelte/store';
 var list = {
     settings: 'Параметры',
+    countdown: 'Обратный отсчёт',
     work: 'Нагрузка',
     relax: 'Отдых',
     pause: 'Пауза',
