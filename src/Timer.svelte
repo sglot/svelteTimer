@@ -1,6 +1,8 @@
 <script>
   import { state } from "./stores/stores.js";
   import { stateList } from "./stores/stores.js";
+  import { mute } from "./stores/stores.js";
+  import { runAttempts } from "./stores/stores.js";
 
   import Textfield from "@smui/textfield";
   import Button, { Label } from "@smui/button";
@@ -26,7 +28,7 @@
   let timer = null;
   let timerFormated = null;
   let counterTimer = 0;
-  let mute = false; // global variable for class Sound too
+  // let mute = false; // global variable for class Sound too
   let audio; // class Sound
 
   let startIntervalId;
@@ -57,7 +59,6 @@
   let diff = 0;
   let counter = 0;
   let firstStart = true;
-  let el;
 
   const unsubscribe = state.subscribe(value => {
     cur_state = value;
@@ -122,8 +123,8 @@
     timer = null;
     isInitState = false;
     mobile = false;
-    audio = new Sound(mute, '/sounds/sek.mp3');
-
+    audio = new Sound($mute, '/sounds/sek.mp3');
+    
 
     if (!firstStart) {
         return;
@@ -133,6 +134,7 @@
     canvas.width = circleWidth;
     canvas.height = circleWidth;
     ctx = canvas.getContext("2d");
+    canvas.style.left = 0 + "px";
 
     if (window.innerWidth < 290) {
       mobile = true;
@@ -159,16 +161,15 @@
     // до начала 3,2,1...
     if (!isInitState) {
       audio.replay();
-       
 
       preWorktIntervalId = setInterval(() => {
         
         audio.replay();
-         
 
         console.log(preWorkTime);
         preWorkTime--;
         c('pre === ' + preWorkTime);
+
         if (0 === preWorkTime) {
           clearInterval(preWorktIntervalId);
           // state.update(state => states.work);
@@ -187,22 +188,20 @@
 
 
 
-var flag=0;
+  var flag=0;
   function go(d) {
         if (flag) {c("d--- " + d); c("flag = 1 count -> " + counter);} else
         if (d < 0) {
           // sleep();
         // если setTimeout задерживает на меньшее кол-во времени, 
         // то задерживаем выполнение дополнительно на 
-
-        clearTimeout(flyInterval);
-
-        flyInterval = setTimeout(() => {
-                // flag =1;
-                c("target diff -> " + d);
-                c("target count -> " + counter);
-                go(0);
-              }, (d * (-1)));
+          clearTimeout(flyInterval);
+          flyInterval = setTimeout(() => {
+            // flag =1;
+            c("target diff -> " + d);
+            c("target count -> " + counter);
+            go(0);
+          }, (d * (-1)));
         } else {
           flyInterval = setTimeout(() => {
             fly();
@@ -212,7 +211,7 @@ var flag=0;
     } 
 
   function work() {
-   console.log("work");
+  // console.log("work");
     if (!isInitState) {
       counterTimer = 0;
       ctx.strokeStyle = "#ff7c20";
@@ -243,47 +242,40 @@ var flag=0;
   }
 
   function isMomentForNextState() {
-//    console.log("ismoment");
+
     if (stopping()) return;
 
+    let balance = 0;
+    let nextState = 'new';
+    let stateTime = 0;
+
     if (cur_state === states.relax) {
-      diff = getDiff();
-      c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
-      c("diff ->  " + (diff));
-      if (flag ==1 ) c("diff -> flag =1  ");
-
-      if (Math.abs((ideal) / 1000 - (workTime + relaxTime) * curLap) == 0) {
-        state.update(state => states.work);
-        counterTimer = 0;
-        isInitState = false;
-
-        c("relax -> work: " + (real / 1000 - (workTime + relaxTime) * curLap));
-      }
-
-      circle(workTime);
-      
-      go(diff);
-      return;
+      balance = Math.abs((ideal) / 1000 - (workTime + relaxTime) * curLap);
+      nextState = states.work;
     }
-
 
     if (cur_state === states.work) {
-      c("ideal ->  " + (ideal));
-      circle(relaxTime);
-      diff = getDiff();
-
-      if (Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)) == 0) {
-        state.update(state => states.relax);
-        counterTimer = 0;
-        isInitState = false;
-        c("work -> relax: " + (real / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime)));
-        c("relax ->  " + (real / 1000 - (workTime + relaxTime) * curLap));
-        c("diff ->  " + (diff));
-      }
-      
-      
-      go(diff);
+      balance = Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curLap - 1) + workTime));
+      nextState = states.relax;
     }
+
+    circle(stateTime = cur_state === states.work ? workTime : relaxTime);
+
+    if ((balance <= 6 && stateTime > 10) || (balance <= 3 && stateTime > 5 && stateTime <= 10)) {
+      if (balance%1<0.5) {audio.replay();} else {audio.stop();}
+
+    }
+
+
+
+    if (balance === 0) {
+      state.update(state => nextState);
+      counterTimer = 0;
+      isInitState = false;
+      audio.stop();
+    }
+
+    go(getDiff());
   }
 
   function getDiff() {
@@ -292,17 +284,12 @@ var flag=0;
   }
 
   function stopping() {
-//    console.log("stopppnig");
-// real = (new Date().getTime() - startTime)
     remaining = allTime - ideal / 1000;
     if (remaining == 0) {
       stop();
       progress.set(1);
-      console.log("stop: sumTime: " + sumTime);
-      console.log("stop: real: " + real / 1000);
       return true;
     } else {
-      // remaining = allTime - sumTime;
       progress.set(((allTime - remaining) * 100) / allTime / 100);
       return false;
     }
@@ -312,6 +299,7 @@ var flag=0;
     console.log("stop");
     timer = 0;
     sumTime = 0;
+    audio.stop();
     clearInterval(flyInterval);
     ctx.strokeStyle = "#00b60a";
     circle(workTime);
@@ -324,10 +312,18 @@ var flag=0;
         }, 1000);
     }
 
+
+    runAttempts.set(
+                      Number.parseInt(
+                                        localStorage.getItem('runAttempts')
+                                      )
+                      + 1 );
+
+    localStorage.setItem('runAttempts', $runAttempts);
   }
 
   function circle(timeValue) {
-//    console.log("circle");
+  //    console.log("circle");
     ctx.beginPath();
     ctx.clearRect(0, 0, circleWidth, circleHeight);
     let rad = (counterTimer * (180 / timeValue) * (Math.PI * 2)) / 180;
@@ -353,7 +349,7 @@ var flag=0;
   $: validateWorkTime = () => {
       let str = workTime.toString();
       let reg = /^[1-9]{1}(?!\d)$|^[1-6]{1}[0-9]{1}$/; // 1 цифра или 2 цифры (дял секунд от 1 до 60)
-c(reg.test(str));
+      c(reg.test(str));
       return reg.test(str);
 
   }
@@ -463,10 +459,7 @@ c(reg.test(str));
     justify-content: center;
     font-size: 3em;
     flex-flow: column;
-
   }
-
-
 
   .settings-block--time {
     width: 300px;
@@ -653,43 +646,43 @@ c(reg.test(str));
 
   <div class="clock-common">
 
-        <div
-          class="time-block "
-          class:text--disabled={cur_state !== states.work}
-          class:text--active={cur_state === states.work}
-          transition:fade>
-            <p>{states.work}</p>
-        </div>
+    <div
+      class="time-block "
+      class:text--disabled={cur_state !== states.work}
+      class:text--active={cur_state === states.work}
+      transition:fade>
+        <p>{states.work}</p>
+    </div>
 
-        <div style="position: relative;" class=" circle-height">
-          <canvas class="clock-circle text--active" width="0" id="cv" />
+    <div style="position: relative;" class=" circle-height">
+      <canvas class="clock-circle text--active" width="0" id="cv" />
 
-          <div class="time-block circle-height" >
-            {#if preWorkTime}
-              <p
-                style="font-size: 0.5em"
-                transition:slide={{ delay: 0, duration: 10 }}>
-                Начинаем через
-              </p>
-              <span transition:slide={{ delay: 0, duration: 10 }}>
-                {preWorkTime}
-              </span>
-            {/if}
+      <div class="time-block circle-height" >
+        {#if preWorkTime}
+          <p
+            style="font-size: 0.5em"
+            transition:slide={{ delay: 0, duration: 10 }}>
+            Начинаем через
+          </p>
+          <span transition:slide={{ delay: 0, duration: 10 }}>
+            {preWorkTime}
+          </span>
+        {/if}
 
-            {#if null !== timer}
-              <p transition:slide={{ delay: 0, duration: 10 }}>{timerFormated}</p>
-            {/if}
-          </div>
-        </div>
+        {#if null !== timer}
+          <p transition:slide={{ delay: 0, duration: 10 }}>{timerFormated}</p>
+        {/if}
+      </div>
+    </div>
 
 
-        <div
-          class="time-block"
-          class:text--disabled={cur_state !== states.relax}
-          class:text--active={cur_state === states.relax}
-          transition:fade>
-            <p>{states.relax}</p>
-        </div>
+    <div
+      class="time-block"
+      class:text--disabled={cur_state !== states.relax}
+      class:text--active={cur_state === states.relax}
+      transition:fade>
+        <p>{states.relax}</p>
+    </div>
 
   </div>
   <p>start: {startTime}   sumTime: {sumTime}   remaining: {remaining}</p>

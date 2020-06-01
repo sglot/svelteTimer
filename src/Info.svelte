@@ -1,6 +1,21 @@
 <div class="info-header">
 		<span>v. 0.2 | </span>
-		<span>Запуск {runAttempts}</span>
+		<span>Запуск 
+            <span 
+                style="text-decoration:underline steelblue"
+                on:click={changeMute}
+            >
+                {$runAttempts} | 
+            </span>
+        </span>
+		<span>Звук 
+            <span 
+                style="text-decoration:underline double steelblue"
+                on:click={changeMute}
+            >
+                    {$mute ? 'выкл' : 'вкл'}
+            </span>
+        </span>
 </div>
 
 <style>
@@ -11,18 +26,25 @@
 
 <script>
 	import { onMount } from 'svelte';
-
-    let runAttempts = 0;
+    import { mute } from "./stores/stores.js";
+    import { runAttempts } from "./stores/stores.js";
 
 	onMount(() => {
-        runAttempts = localStorage.getItem('runAttempts');
-        if (!isFinite(runAttempts) || runAttempts === null) {
-            runAttempts = 0;
+        // инициализация количества попыток запуска на текущем устройстве
+        runAttempts.set(localStorage.getItem('runAttempts'));
+        if (!isFinite($runAttempts) || $runAttempts === null) {
+            runAttempts.set(0);
             localStorage.setItem('runAttempts', 0);
         }
+
+        //инициализация звук вкл/выкл
+        mute.set(localStorage.getItem('mute') === 'true' ? true : false);
+        localStorage.setItem('mute', $mute);
     });
     
+    function changeMute() {
+        mute.set(!$mute);
+        localStorage.setItem('mute', mute);
+    }
     
-
-
 </script>

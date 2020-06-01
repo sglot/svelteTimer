@@ -7,4 +7,9 @@ var list = {
     end: 'Конец'
 };
 
-export const state = writable('settings'), stateList = writable(list);
+export 
+    const 
+        state = writable('settings'), 
+        stateList = writable(list),
+        runAttempts = writable(0),
+        mute = writable(false);
