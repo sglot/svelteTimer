@@ -24,7 +24,10 @@
   let laps = 2;
 
   const maxInnerLap = 3;
+  const recoveryTime = 3 * 3;
   let curInnerLap = 1;
+  let curOuterLap = 0;
+  let lap = 0;
 
   let preWorkTime = null;
   let remaining = null;
@@ -54,7 +57,6 @@
 
   let timerStep;
   let sumTime = 0;
-  let curOuterLap = 0;
 
   let startTime;
   let ideal = 0;
@@ -62,6 +64,18 @@
   let diff = 0;
   let counter = 0;
   let firstStart = true;
+
+  const resolutions = {
+      verysmall: 290,
+      small: 479,
+      middle: 640
+  };
+
+  const colors = {
+      work: "#ff7c20",
+      relax: "#3b99ff",
+      recovery: "#92ccff"
+  };
 
   const unsubscribe = state.subscribe(value => {
     cur_state = value;
@@ -79,12 +93,17 @@
   let engine = {
     "Нагрузка": () => {work()},
     "Отдых": () => {relax()},
+    "Восстановление сил": () => {recovery()},
   };
 
+  // время кругов
+  let innerLapTime = workTime + relaxTime;
+  let outerLapTime = innerLapTime * (maxInnerLap - 1) + workTime;
+  let lapTime = outerLapTime + recoveryTime;
 
-  $: allTime = (workTime + relaxTime) * laps * maxInnerLap - relaxTime;
-  //  $: remaining = allTime - sumTime;
+  $: allTime = (outerLapTime * laps + (laps - 1) * recoveryTime);
 
+  // форматированное время
   $: hours = Math.floor(allTime / 60 / 60);
   $: minutes = Math.floor(allTime / 60) - hours * 60;
   $: seconds = Math.round(allTime % 60);
@@ -111,6 +130,7 @@
       counter = 0;
       curInnerLap = 1;
       curOuterLap = 0;
+      lap = 1;
       timer = null;
       isInitState = false;
       mobile = false;
@@ -127,23 +147,24 @@
       ctx = canvas.getContext("2d");
       canvas.style.left = 0 + "px";
 
-      if (window.innerWidth < 290) {
+      let widthRegulator = getWidthRegulator();
+      if (widthRegulator) {
         mobile = true;
-        circleWidth = circleHeight = circleWidth / 2.5;
-        lineWidth /= 2.5;
+        circleWidth = circleHeight = circleWidth / widthRegulator;
+        lineWidth /= widthRegulator;
         canvas.width = canvas.height = circleWidth;
-      } else if (window.innerWidth < 479) {
-        mobile = true;
-        circleWidth = circleHeight = circleWidth / 2;
-        lineWidth /= 2;
-        canvas.width = canvas.height = circleWidth;
-        // height == width
-        // в стилях для мобилки width = initial, поэтому берём высоту
-  //      canvas.style.left =  canvas.height / 2 - canvas.offsetLeft + "px";
-      } else {
-          canvas.style.left = 0 + "px";
       }
+
       firstStart = false;
+  }
+
+  function getWidthRegulator() {
+      if (window.innerWidth < resolutions.verysmall) {
+          return 2.5;
+      } else if (window.innerWidth < resolutions.small) {
+          return 2;
+      }
+      return false;
   }
 
     function go(d) {
@@ -204,10 +225,9 @@
   }
 
   function work() {
-  // console.log("work");
     if (!isInitState) {
       counterTimer = 0;
-      ctx.strokeStyle = "#ff7c20";
+      ctx.strokeStyle = colors.work;
       isInitState = true;
       curOuterLap++;
     }
@@ -215,64 +235,123 @@
     counterTimer = counterTimer + timerStep / 1000;
     timer = workTime - counterTimer;
     timerFormated = Math.round(timer, -3);
-    isMomentForNextState();
+    nextState();
   }
 
   function relax() {
-//    console.log("relax");
     if (!isInitState) {
       counterTimer = relaxTime;
-      ctx.strokeStyle = "#3b99ff";
+      ctx.strokeStyle = colors.relax;
       isInitState = true;
     }
 
     counterTimer = counterTimer - timerStep / 1000;
     timer = counterTimer;
     timerFormated = Math.round(timer, -3);
-    isMomentForNextState();
-    // circle(relaxTime);
+    nextState();
   }
 
-  function isMomentForNextState() {
+  function recovery() {
+    if (!isInitState) {
+      counterTimer = recoveryTime;
+      ctx.strokeStyle = colors.recovery;
+      isInitState = true;
+    }
 
-    if (stopping()) return;
+    counterTimer = counterTimer - timerStep / 1000;
+    timer = counterTimer;
+    timerFormated = Math.round(timer, -3);
+    nextState();
+  }
+
+  function nextState() {
+
+    if (stopping()) {
+        return;
+    }
 
     let balance = 0;
     let nextState = 'new';
     let stateTime = 0;
 
     if (cur_state === states.relax) {
-      balance = Math.abs((ideal) / 1000 - (workTime + relaxTime) * curOuterLap);
+      balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1) + (workTime + relaxTime) * curInnerLap));
       nextState = states.work;
     }
 
     if (cur_state === states.work) {
-      balance = Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curOuterLap - 1) + workTime));
+      balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1)  + (workTime + relaxTime) * (curInnerLap - 1) + workTime ));
       nextState = states.relax;
+
+            c('balance=' + balance);
+            c('innerLapTime=' + innerLapTime);
+            c('outerLapTime=' + outerLapTime);
+            c('lap=' + lap);
+            c('curOuterLap=' + lap);
+            c('lapTime=' + lapTime);
+            c('sum=' + ((lapTime * (lap - 1)  + (workTime + relaxTime) * (curInnerLap - 1) + workTime )));
     }
 
-    circle(stateTime = cur_state === states.work ? workTime : relaxTime);
+    if (cur_state === states.recovery) {
+      balance = Math.abs((ideal) / 1000 - lapTime * lap);
+      nextState = states.work;
+      c('balance=' + balance);
+      c('innerLapTime=' + innerLapTime);
+      c('outerLapTime=' + outerLapTime);
+      c('lap=' + lap);
+      c('sum=' + ((outerLapTime + recoveryTime) * lap));
+    }
 
+    circle(stateTime = getTimeOfState(cur_state));
+
+    // определяем промежуток таймера, когда воспроизводим звук щелчка
     if ((balance <= 6 && stateTime > 10) || (balance <= 3 && stateTime > 5 && stateTime <= 10)) {
-      if (balance%1<0.5) {audio.replay();} else {audio.stop();}
-
+      if (balance%1<0.5) {
+          audio.replay();
+      } else {
+          audio.stop();
+      }
     }
 
     if (balance === 0) {
+      // смена состояния работа-отдых
+      c('balance = 0');
       state.update(state => nextState);
       counterTimer = 0;
       isInitState = false;
       audio.stop();
+
+      // проверка на завершение внешнего круга
+      // переход к долгому отдыху
       if (nextState === states.work) {
           if (curInnerLap === maxInnerLap) {
             curInnerLap = 1;
+            lap++;
           } else {
             curInnerLap++;
+          }
+      } else if (nextState === states.relax) {
+          if (curInnerLap === maxInnerLap) {
+            state.update(state => states.recovery);
           }
       }
     }
 
     go(getDiff());
+  }
+
+  function getTimeOfState(state) {
+      if (state === states.work) {
+          return workTime;
+      }
+
+      if (state === states.relax) {
+          return relaxTime;
+      }
+
+      if (state === states.recovery) {
+          return recoveryTime;
+      }
   }
 
   function getDiff() {
