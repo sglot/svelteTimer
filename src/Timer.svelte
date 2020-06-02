@@ -64,6 +64,13 @@
   let diff = 0;
   let counter = 0;
   let firstStart = true;
+  let started = false;
+  let paused = false;
+  let pausedTime = 0;
+  let pauseStartTime = 0;
+  let pauseStopTime = 0;
+  let pauseTempState;
+
 
   const resolutions = {
       verysmall: 290,
@@ -74,7 +81,8 @@
   const colors = {
       work: "#ff7c20",
       relax: "#3b99ff",
-      recovery: "#92ccff"
+      recovery: "#92ccff",
+      stop: "#00b60a",
   };
 
   const unsubscribe = state.subscribe(value => {
@@ -94,6 +102,7 @@
     "Нагрузка": () => {work()},
     "Отдых": () => {relax()},
     "Восстановление сил": () => {recovery()},
+    "Пауза": () => {turnPause()},
   };
 
   // время кругов
@@ -116,8 +125,10 @@
 
 
   function start() {
+      started = true;
     init();
     cur_state = states.countdown;
+    scrollTo('clock-common');
     go(0);
   }
 
@@ -133,9 +144,13 @@
       lap = 1;
       timer = null;
       isInitState = false;
-      mobile = false;
+      mobile = true;
       audio = new Sound($mute, '/sounds/sek.mp3');
 
+        pausedTime = 0;
+        pauseStartTime = 0;
+        pauseStopTime = 0;
+        pauseTempState;
 
       if (!firstStart) {
           return;
@@ -169,13 +184,10 @@
 
     function go(d) {
       if (d < 0) {
-        // sleep();
-      // если setTimeout задерживает на меньшее кол-во времени,
-      // то задерживаем выполнение дополнительно на
+        // если setTimeout задерживает на меньшее кол-во времени,
+        // то задерживаем выполнение дополнительно на
         clearTimeout(flyInterval);
         flyInterval = setTimeout(() => {
-          c("target diff -> " + d);
-          c("target count -> " + counter);
           go(0);
         }, (d * (-1)));
       } else {
@@ -264,6 +276,27 @@
     nextState();
   }
 
+  function turnPause() {
+    c("pause");
+  }
+
+  function setPauseState() {
+    paused = !paused;
+    if (paused) {
+        pauseTempState = cur_state;
+        cur_state = states.pause;
+        pauseStartTime = new Date().getTime();
+
+    } else {
+        cur_state = pauseTempState;
+        pauseTempState = '';
+        pauseStopTime = new Date().getTime();
+        pausedTime += pauseStartTime - pauseStopTime;
+        nextState()
+    }
+
+  }
+
   function nextState() {
 
     if (stopping()) {
@@ -275,12 +308,12 @@
     let stateTime = 0;
 
     if (cur_state === states.relax) {
-      balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1) + (workTime + relaxTime) * curInnerLap));
+      balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap));
       nextState = states.work;
     }
 
     if (cur_state === states.work) {
-      balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1)  + (workTime + relaxTime) * (curInnerLap - 1) + workTime ));
+      balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1)  + innerLapTime * (curInnerLap - 1) + workTime ));
       nextState = states.relax;
 
             c('balance=' + balance);
@@ -289,7 +322,7 @@
             c('lap=' + lap);
             c('curOuterLap=' + lap);
             c('lapTime=' + lapTime);
-            c('sum=' + ((lapTime * (lap - 1)  + (workTime + relaxTime) * (curInnerLap - 1) + workTime )));
+            c('sum=' + ((lapTime * (lap - 1)  + innerLapTime * (curInnerLap - 1) + workTime )));
     }
 
     if (cur_state === states.recovery) {
@@ -306,7 +339,7 @@
 
     // определяем промежуток таймера, когда воспроизводим звук щелчка
     if ((balance <= 6 && stateTime > 10) || (balance <= 3 && stateTime > 5 && stateTime <= 10)) {
-      if (balance%1<0.5) {
+      if (balance % 1 < 0.5) {
           audio.replay();
       } else {
           audio.stop();
@@ -355,7 +388,7 @@
   }
 
   function getDiff() {
-    real = (new Date().getTime() - startTime) ;
+    real = (new Date().getTime() - startTime - pausedTime) ;
     return real - ideal;
   }
 
@@ -378,17 +411,11 @@
     sumTime = 0;
     audio.stop();
     clearInterval(flyInterval);
-    ctx.strokeStyle = "#00b60a";
+    ctx.strokeStyle = colors.stop;
     circle(workTime);
     state.update(state => states.end);
 
-
-    if (mobile) {
-        setTimeout(()=>{
-            document.getElementById("btn_start").scrollIntoView({behavior: "smooth"});
-        }, 1000);
-    }
-
+    scrollTo('btn_start');
 
     runAttempts.set(
                       Number.parseInt(
@@ -397,6 +424,14 @@
                       + 1 );
 
     localStorage.setItem('runAttempts', $runAttempts);
+  }
+
+  function scrollTo(id) {
+      if (mobile) {
+          setTimeout(()=>{
+              document.getElementById(id).scrollIntoView({behavior: "smooth"});
+          }, 1000);
+      }
   }
 
   function circle(timeValue) {
@@ -455,7 +490,7 @@
       font-size: 1.5em !important;
       width: 150px !important;
       height: 150px !important;
-      margin: 0 auto;
+      margin: 25px auto;
     }
 
     .clock-common {
@@ -490,7 +525,7 @@
         font-size: 1.2em !important;
         width: 120px !important;
         height: 120px !important;
-        margin: 0 auto;
+        margin: 5px auto;
       }
 
       .clock-common {
@@ -620,7 +655,7 @@
   }
 </style>
 
-{#if !sumTime && !preWorkTime}
+{#if (!sumTime && !preWorkTime && !mobile) || mobile}
   <div
     class="settings-side"
     id="settings"
@@ -631,30 +666,6 @@
     }
   >
     <h2 transition:fade>Параметры</h2>
-
-<!--    <Textfield
-      type="number"
-      input$min="0"
-      input$max="60"
-      class="shaped-outlined"
-      style="margin: 1em;"
-      variant="outlined"
-      bind:value={workTime}
-      label="Время работы"
-      input$aria-controls="helper-text-shaped-outlined-a"
-      input$aria-describedby="helper-text-shaped-outlined-a" />
-    <Textfield
-      type="number"
-      input$min="0"
-      input$max="60"
-      class="shaped-outlined"
-      style="margin: 1em;"
-      variant="outlined"
-      bind:value={relaxTime}
-      label="Время отдыха"
-      input$aria-controls="helper-text-shaped-outlined-a"
-      input$aria-describedby="helper-text-shaped-outlined-a" />
--->
 
   <div class="settings-block-container">
 
@@ -709,10 +720,18 @@
     <Button
         on:click =  {start}
         variant =   "unelevated"
-        disabled =  "{!validateWorkTime()}"
+        disabled =  "{started}"
     >
       <Label>Старт</Label>
     </Button>
+
+        <Button
+            on:click =  {setPauseState}
+            variant =   "unelevated"
+            disabled =  "{!started}"
+        >
+          <Label>Пауза</Label>
+        </Button>
 
 
 
@@ -721,7 +740,7 @@
 
 <div class="tablo-side">
 
-  <div class="clock-common">
+  <div class="clock-common" id="clock-common">
 
     <div
       class="time-block "
