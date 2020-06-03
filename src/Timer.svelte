@@ -19,12 +19,12 @@
   import { crossfade } from "svelte/transition";
   import { flip } from "svelte/animate";
 
-  let workTime = 2;
-  let relaxTime = 2;
-  let laps = 2;
+  let workTime = 30;
+  let relaxTime = 30;
+  let laps = 3;
 
   const maxInnerLap = 3;
-  const recoveryTime = 3 * 3;
+  const recoveryTime = 3 * 60;
   let curInnerLap = 1;
   let curOuterLap = 0;
   let lap = 0;
@@ -218,7 +218,6 @@
   }
 
   function preWork() {
-    console.log("prework states.countdown");
     // до начала 3,2,1...
     if (!isInitState) {
       audio.replay();
@@ -331,24 +330,11 @@
     if (cur_state === states.work) {
       balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1)  + innerLapTime * (curInnerLap - 1) + workTime ));
       nextState = states.relax;
-
-            c('balance=' + balance);
-            c('innerLapTime=' + innerLapTime);
-            c('outerLapTime=' + outerLapTime);
-            c('lap=' + lap);
-            c('curOuterLap=' + lap);
-            c('lapTime=' + lapTime);
-            c('sum=' + ((lapTime * (lap - 1)  + innerLapTime * (curInnerLap - 1) + workTime )));
     }
 
     if (cur_state === states.recovery) {
       balance = Math.abs((ideal) / 1000 - lapTime * lap);
       nextState = states.work;
-      c('balance=' + balance);
-      c('innerLapTime=' + innerLapTime);
-      c('outerLapTime=' + outerLapTime);
-      c('lap=' + lap);
-      c('sum=' + ((outerLapTime + recoveryTime) * lap));
     }
 
     circle(stateTime = getTimeOfState(cur_state));
@@ -454,7 +440,6 @@
   }
 
   function circle(timeValue) {
-  //    console.log("circle");
     ctx.beginPath();
     ctx.clearRect(0, 0, circleWidth, circleHeight);
     let rad = (counterTimer * (180 / timeValue) * (Math.PI * 2)) / 180;
@@ -850,12 +835,7 @@
     </div>
 
   </div>
-  <p>start: {startTime}   sumTime: {sumTime}   remaining: {remaining}</p>
-  <p>real: {real}</p>
-  <p>ideal: {ideal}</p>
-  <p>diff: {diff}</p>
-  <br>
-  <p>lap: {curInnerLap}</p>
+
 
   <div class="common-block-data">
     <div class="common-block-data-list">
@@ -868,9 +848,7 @@
   </div>
 
   <audio id="audio">
-    <!-- <source src="audio/music.ogg" type="audio/ogg; codecs=vorbis"> -->
     <source src="/sounds/sek.mp3" type="audio/mpeg">
-    Тег audio не поддерживается вашим браузером. 
-    <!-- <a href="audio/music.mp3">Скачайте музыку</a>. -->
+    Тег audio не поддерживается вашим браузером.
   </audio>
 </div>
