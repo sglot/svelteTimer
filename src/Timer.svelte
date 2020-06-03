@@ -41,7 +41,7 @@
   let preWorktIntervalId;
   let timerIntervalId;
 
-  let flyInterval;
+  let engineStepTimeoutId;
   let isInitState;
 
   let cur_state;
@@ -65,6 +65,7 @@
   let counter = 0;
   let firstStart = true;
   let started = false;
+  let preworked = false;
   let paused = false;
   let pausedTime = 0;
   let pauseStartTime = 0;
@@ -73,9 +74,10 @@
 
 
   const resolutions = {
-      verysmall: 290,
+      very_small: 290,
       small: 479,
-      middle: 640
+      middle: 640,
+      min_desktop: 980
   };
 
   const colors = {
@@ -125,7 +127,7 @@
 
 
   function start() {
-      started = true;
+    started = true;
     init();
     cur_state = states.countdown;
     scrollTo('clock-common');
@@ -144,13 +146,14 @@
       lap = 1;
       timer = null;
       isInitState = false;
+      preworked = false;
       mobile = true;
       audio = new Sound($mute, '/sounds/sek.mp3');
 
         pausedTime = 0;
         pauseStartTime = 0;
         pauseStopTime = 0;
-        pauseTempState;
+        pauseTempState ='';
 
       if (!firstStart) {
           return;
@@ -174,10 +177,14 @@
   }
 
   function getWidthRegulator() {
-      if (window.innerWidth < resolutions.verysmall) {
+      if (window.innerWidth < resolutions.very_small) {
           return 2.5;
       } else if (window.innerWidth < resolutions.small) {
           return 2;
+      } else if (window.innerWidth < resolutions.middle) {
+          return 2;
+      } else if (window.innerWidth < resolutions.min_desktop) {
+          return 1.5;
       }
       return false;
   }
@@ -186,18 +193,18 @@
       if (d < 0) {
         // если setTimeout задерживает на меньшее кол-во времени,
         // то задерживаем выполнение дополнительно на
-        clearTimeout(flyInterval);
-        flyInterval = setTimeout(() => {
+        clearTimeout(engineStepTimeoutId);
+        engineStepTimeoutId = setTimeout(() => {
           go(0);
         }, (d * (-1)));
       } else {
-        flyInterval = setTimeout(() => {
-          fly();
+        engineStepTimeoutId = setTimeout(() => {
+          engineStep();
         }, (timerStep - d));
       }
     }
 
-  function fly() {
+  function engineStep() {
     if (cur_state === states.countdown) {
       preWork();
       return;
@@ -228,6 +235,7 @@
           startTime = new Date().getTime();
           console.clear();
           audio.stop();
+          preworked = true;
           go(diff);
         }
       }, 1000);
@@ -277,27 +285,35 @@
   }
 
   function turnPause() {
-    c("pause");
+    if (paused) {
+        pauseStartTime = new Date().getTime();
+    } else {
+        cur_state = pauseTempState;
+        pauseTempState = '';
+        pauseStopTime = new Date().getTime();
+        pausedTime = pausedTime + pauseStartTime - pauseStopTime;
+        nextState();
+    }
   }
 
+  // по нажатию кнопки пользователем
   function setPauseState() {
     paused = !paused;
     if (paused) {
         pauseTempState = cur_state;
         cur_state = states.pause;
-        pauseStartTime = new Date().getTime();
-
     } else {
-        cur_state = pauseTempState;
-        pauseTempState = '';
-        pauseStopTime = new Date().getTime();
-        pausedTime += pauseStartTime - pauseStopTime;
-        nextState()
+        turnPause();
     }
 
   }
 
   function nextState() {
+
+    if (paused) {
+        go(getDiff());
+        return;
+    }
 
     if (stopping()) {
         return;
@@ -370,6 +386,7 @@
       }
     }
 
+
     go(getDiff());
   }
 
@@ -388,7 +405,7 @@
   }
 
   function getDiff() {
-    real = (new Date().getTime() - startTime - pausedTime) ;
+    real = (new Date().getTime() - startTime + pausedTime) ;
     return real - ideal;
   }
 
@@ -410,10 +427,12 @@
     timer = 0;
     sumTime = 0;
     audio.stop();
-    clearInterval(flyInterval);
+    clearInterval(engineStepTimeoutId);
     ctx.strokeStyle = colors.stop;
     circle(workTime);
     state.update(state => states.end);
+    preworked = false;
+    started = false;
 
     scrollTo('btn_start');
 
@@ -482,7 +501,56 @@
     font-weight: 100;
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 641px) and (max-width: 980px) {
+    .time-block {
+      font-size: 1.5em !important;
+      width: 200px !important;
+      height: 200px !important;
+      /*margin: 50px auto;*/
+    }
+
+    .common-block-data {
+      font-size: 0.7em;
+    }
+
+    .circle-height {
+      height: 200px !important;
+      /*margin: 0 auto;*/
+      width: 200px;
+      /*margin: 50px auto;*/
+    }
+
+    .settings-block--time {
+      font-size: 1em !important;
+      width: 200px !important;
+      height: 200px !important;
+    }
+  }
+
+  @media (min-width: 480px) and (max-width: 640px) {
+      .time-block {
+        font-size: 1.5em !important;
+        width: 140px !important;
+        height: 140px !important;
+        /*margin: 30px auto;*/
+      }
+
+      .common-block-data {
+        font-size: 0.7em;
+      }
+
+      .circle-height {
+        height: 140px !important;
+        /*margin: 0 auto;*/
+        width: 140px;
+      }
+
+      .settings-block--time {
+        font-size: 1em !important;
+        width: 140px !important;
+        height: 140px !important;
+        /*margin: 0 auto !important;*/
+      }
   }
 
   @media screen and (min-width: 291px) and (max-width: 479px) {
@@ -725,13 +793,14 @@
       <Label>Старт</Label>
     </Button>
 
-        <Button
-            on:click =  {setPauseState}
-            variant =   "unelevated"
-            disabled =  "{!started}"
-        >
-          <Label>Пауза</Label>
-        </Button>
+    <Button
+        on:click =  {setPauseState}
+        variant =   "outlined"
+        disabled =  "{!preworked || cur_state === states.recovery}"
+        color = 'secondary'
+    >
+      <Label>Пауза</Label>
+    </Button>
 
 
 

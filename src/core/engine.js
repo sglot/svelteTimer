@@ -2,10 +2,10 @@ var engine = new function() {
     let funcs = [];
 
     this.push = function() {
-        if (arguments.length == 1 && arguments[0] && arguments[0].name) 
+        if (arguments.length === 1 && arguments[0] && arguments[0].name)
             funcs[arguments[0].name] = arguments[0];
         console.log(arguments);
-    }
+    };
 
     this.run = function(name) {
         console.log(name);
@@ -13,7 +13,7 @@ var engine = new function() {
         if (name && name in funcs) 
             return funcs[name]();
         // console.log(arguments);
-    }
+    };
 };
 
 export {engine};

@@ -1,21 +1,21 @@
 <div class="info-header">
-		<span>v. 0.3 | </span>
-		<span>Запуск 
-            <span 
-                style="text-decoration:underline steelblue"
-                on:click={changeMute}
-            >
-                {$runAttempts} | 
-            </span>
+    <span>v. 0.35 | </span>
+    <span>Запуск
+        <span
+            style="text-decoration:underline steelblue"
+            on:click={changeMute}
+        >
+            {$runAttempts} |
         </span>
-		<span>Звук 
-            <span 
-                style="text-decoration:underline double steelblue"
-                on:click={changeMute}
-            >
-                    {$mute ? 'выкл' : 'вкл'}
-            </span>
+    </span>
+    <span>Звук
+        <span
+            style="text-decoration:underline double steelblue"
+            on:click={changeMute}
+        >
+                {$mute ? 'выкл' : 'вкл'}
         </span>
+    </span>
 </div>
 
 <style>
