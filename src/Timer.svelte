@@ -19,12 +19,12 @@
   import { crossfade } from "svelte/transition";
   import { flip } from "svelte/animate";
 
-  let workTime = 30;
-  let relaxTime = 30;
+  let workTime = 2;
+  let relaxTime = 2;
   let laps = 3;
 
   const maxInnerLap = 3;
-  const recoveryTime = 3 * 60;
+  const recoveryTime = 1 * 60;
   let curInnerLap = 1;
   let curOuterLap = 0;
   let lap = 0;
@@ -32,9 +32,7 @@
   let preWorkTime = null;
   let remaining = null;
   let timer = null;
-  let timerFormated = null;
   let counterTimer = 0;
-  // let mute = false; // global variable for class Sound too
   let audio; // class Sound
 
   let startIntervalId;
@@ -108,9 +106,9 @@
   };
 
   // время кругов
-  let innerLapTime = workTime + relaxTime;
-  let outerLapTime = innerLapTime * (maxInnerLap - 1) + workTime;
-  let lapTime = outerLapTime + recoveryTime;
+  $: innerLapTime = workTime + relaxTime;
+  $: outerLapTime = innerLapTime * (maxInnerLap - 1) + workTime;
+  $: lapTime = outerLapTime + recoveryTime;
 
   $: allTime = (outerLapTime * laps + (laps - 1) * recoveryTime);
 
@@ -123,10 +121,20 @@
   $: rMinutes = Math.round(remaining / 60) - rHours * 60;
   $: rSeconds = Math.round(remaining % 60);
 
+  $: timerFormatted = () => {
+      return timer < 61
+          ? Math.round(timer, -3)
+          : getTwoNumberFormat(Math.round(timer / 60)) + ':' + getTwoNumberFormat(Math.round(timer % 60));
+  };
 
+   function getTwoNumberFormat($number) {
+       let sek = Math.round($number % 60);
+       return sek < 10
+            ? '0' + sek
+            : sek;
+   }
 
-
-  function start() {
+  function start() { c('w=' +workTime); c('r='+relaxTime);
     started = true;
     init();
     cur_state = states.countdown;
@@ -171,6 +179,8 @@
         circleWidth = circleHeight = circleWidth / widthRegulator;
         lineWidth /= widthRegulator;
         canvas.width = canvas.height = circleWidth;
+      } else {
+         mobile = false;
       }
 
       firstStart = false;
@@ -253,7 +263,6 @@
 
     counterTimer = counterTimer + timerStep / 1000;
     timer = workTime - counterTimer;
-    timerFormated = Math.round(timer, -3);
     nextState();
   }
 
@@ -266,7 +275,6 @@
 
     counterTimer = counterTimer - timerStep / 1000;
     timer = counterTimer;
-    timerFormated = Math.round(timer, -3);
     nextState();
   }
 
@@ -279,7 +287,6 @@
 
     counterTimer = counterTimer - timerStep / 1000;
     timer = counterTimer;
-    timerFormated = Math.round(timer, -3);
     nextState();
   }
 
@@ -325,6 +332,7 @@
     if (cur_state === states.relax) {
       balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap));
       nextState = states.work;
+      c('balance =' + balance);
     }
 
     if (cur_state === states.work) {
@@ -820,7 +828,7 @@
         {/if}
 
         {#if null !== timer}
-          <p transition:slide={{ delay: 0, duration: 10 }}>{timerFormated}</p>
+          <p transition:slide={{ delay: 0, duration: 10 }}>{timerFormatted()}</p>
         {/if}
       </div>
     </div>
