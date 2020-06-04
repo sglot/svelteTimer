@@ -24,7 +24,7 @@
   let laps = 3;
 
   const maxInnerLap = 3;
-  const recoveryTime = 1 * 60;
+  const recoveryTime = 1 * 6;
   let curInnerLap = 1;
   let curOuterLap = 0;
   let lap = 0;
@@ -47,7 +47,7 @@
 
   let canvas;
   let ctx;
-  let mobile;
+  let mobile = false;
 
   let circleWidth = 300;
   let circleHeight = 300;
@@ -113,8 +113,8 @@
   $: allTime = (outerLapTime * laps + (laps - 1) * recoveryTime);
 
   // форматированное время
-  $: hours = Math.floor(allTime / 60 / 60);
-  $: minutes = Math.floor(allTime / 60) - hours * 60;
+  $: hours = Math.round(allTime / 60 / 60);
+  $: minutes = Math.round(allTime / 60) - hours * 60;
   $: seconds = Math.round(allTime % 60);
 
   $: rHours = Math.round(remaining / 60 / 60);
@@ -134,7 +134,7 @@
             : sek;
    }
 
-  function start() { c('w=' +workTime); c('r='+relaxTime);
+  function start() {
     started = true;
     init();
     cur_state = states.countdown;
@@ -155,7 +155,7 @@
       timer = null;
       isInitState = false;
       preworked = false;
-      mobile = true;
+//      mobile = true;
       audio = new Sound($mute, '/sounds/sek.mp3');
 
         pausedTime = 0;
@@ -332,7 +332,6 @@
     if (cur_state === states.relax) {
       balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap));
       nextState = states.work;
-      c('balance =' + balance);
     }
 
     if (cur_state === states.work) {
@@ -443,7 +442,7 @@
       if (mobile) {
           setTimeout(()=>{
               document.getElementById(id).scrollIntoView({behavior: "smooth"});
-          }, 1000);
+          }, 500);
       }
   }
 
@@ -714,9 +713,26 @@
     transition: top 1s cubic-bezier(0, 0, 1, 1) 500ms;
     top: -1000px !important;
   }
+
+  .innerlap-counter {
+    color: white;
+    height: 1.5em;
+    width: 33%;
+    background-color: darkseagreen;
+    border-radius: 25%;
+    /*border:1px solid #f4eefa;*/
+  }
+
+  .innerlap-counter-container {
+    margin-top: 2em;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
 </style>
 
-{#if (!sumTime && !preWorkTime && !mobile) || mobile}
+{#if ( !started)}
   <div
     class="settings-side"
     id="settings"
@@ -819,16 +835,18 @@
         {#if preWorkTime}
           <p
             style="font-size: 0.5em"
-            transition:slide={{ delay: 0, duration: 10 }}>
+           >
             Начинаем через
           </p>
-          <span transition:slide={{ delay: 0, duration: 10 }}>
+          <span>
             {preWorkTime}
           </span>
         {/if}
 
         {#if null !== timer}
-          <p transition:slide={{ delay: 0, duration: 10 }}>{timerFormatted()}</p>
+          <p>
+            {timerFormatted()}
+          </p>
         {/if}
       </div>
     </div>
@@ -846,6 +864,23 @@
 
 
   <div class="common-block-data">
+    <div class="innerlap-counter-container">
+        {#if curInnerLap>0 && preworked || curInnerLap>2}
+            <div class="innerlap-counter" transition:fade>
+                1
+            </div>
+        {/if}
+        {#if curInnerLap>1}
+            <div class="innerlap-counter" transition:fade>
+                2
+            </div>
+        {/if}
+        {#if curInnerLap>2}
+            <div class="innerlap-counter" transition:fade>
+                3
+            </div>
+        {/if}
+    </div>
     <div class="common-block-data-list">
       {#if !mobile}
         <span>Общее время: {minutes} мин {seconds} сек</span>
