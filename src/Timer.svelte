@@ -21,24 +21,25 @@
 
   let workTime = 2;
   let relaxTime = 2;
-  let laps = 2;
+  let laps = 3;
 
   const maxInnerLap = 3;
+  const recoveryTime = 1 * 6;
   let curInnerLap = 1;
+  let curOuterLap = 0;
+  let lap = 0;
 
   let preWorkTime = null;
   let remaining = null;
   let timer = null;
-  let timerFormated = null;
   let counterTimer = 0;
-  // let mute = false; // global variable for class Sound too
   let audio; // class Sound
 
   let startIntervalId;
   let preWorktIntervalId;
   let timerIntervalId;
 
-  let flyInterval;
+  let engineStepTimeoutId;
   let isInitState;
 
   let cur_state;
@@ -46,7 +47,7 @@
 
   let canvas;
   let ctx;
-  let mobile;
+  let mobile = false;
 
   let circleWidth = 300;
   let circleHeight = 300;
@@ -54,7 +55,6 @@
 
   let timerStep;
   let sumTime = 0;
-  let curOuterLap = 0;
 
   let startTime;
   let ideal = 0;
@@ -62,6 +62,28 @@
   let diff = 0;
   let counter = 0;
   let firstStart = true;
+  let started = false;
+  let preworked = false;
+  let paused = false;
+  let pausedTime = 0;
+  let pauseStartTime = 0;
+  let pauseStopTime = 0;
+  let pauseTempState;
+
+
+  const resolutions = {
+      very_small: 290,
+      small: 479,
+      middle: 640,
+      min_desktop: 980
+  };
+
+  const colors = {
+      work: "#ff7c20",
+      relax: "#3b99ff",
+      recovery: "#92ccff",
+      stop: "#00b60a",
+  };
 
   const unsubscribe = state.subscribe(value => {
     cur_state = value;
@@ -79,26 +101,44 @@
   let engine = {
     "Нагрузка": () => {work()},
     "Отдых": () => {relax()},
+    "Восстановление сил": () => {recovery()},
+    "Пауза": () => {turnPause()},
   };
 
+  // время кругов
+  $: innerLapTime = workTime + relaxTime;
+  $: outerLapTime = innerLapTime * (maxInnerLap - 1) + workTime;
+  $: lapTime = outerLapTime + recoveryTime;
 
-  $: allTime = (workTime + relaxTime) * laps * maxInnerLap - relaxTime;
-  //  $: remaining = allTime - sumTime;
+  $: allTime = (outerLapTime * laps + (laps - 1) * recoveryTime);
 
-  $: hours = Math.floor(allTime / 60 / 60);
-  $: minutes = Math.floor(allTime / 60) - hours * 60;
+  // форматированное время
+  $: hours = Math.round(allTime / 60 / 60);
+  $: minutes = Math.round(allTime / 60) - hours * 60;
   $: seconds = Math.round(allTime % 60);
 
   $: rHours = Math.round(remaining / 60 / 60);
   $: rMinutes = Math.round(remaining / 60) - rHours * 60;
   $: rSeconds = Math.round(remaining % 60);
 
+  $: timerFormatted = () => {
+      return timer < 61
+          ? Math.round(timer, -3)
+          : getTwoNumberFormat(Math.round(timer / 60)) + ':' + getTwoNumberFormat(Math.round(timer % 60));
+  };
 
-
+   function getTwoNumberFormat($number) {
+       let sek = Math.round($number % 60);
+       return sek < 10
+            ? '0' + sek
+            : sek;
+   }
 
   function start() {
+    started = true;
     init();
     cur_state = states.countdown;
+    scrollTo('clock-common');
     go(0);
   }
 
@@ -111,11 +151,17 @@
       counter = 0;
       curInnerLap = 1;
       curOuterLap = 0;
+      lap = 1;
       timer = null;
       isInitState = false;
-      mobile = false;
+      preworked = false;
+//      mobile = true;
       audio = new Sound($mute, '/sounds/sek.mp3');
 
+        pausedTime = 0;
+        pauseStartTime = 0;
+        pauseStopTime = 0;
+        pauseTempState ='';
 
       if (!firstStart) {
           return;
@@ -127,44 +173,48 @@
       ctx = canvas.getContext("2d");
       canvas.style.left = 0 + "px";
 
-      if (window.innerWidth < 290) {
+      let widthRegulator = getWidthRegulator();
+      if (widthRegulator) {
         mobile = true;
-        circleWidth = circleHeight = circleWidth / 2.5;
-        lineWidth /= 2.5;
+        circleWidth = circleHeight = circleWidth / widthRegulator;
+        lineWidth /= widthRegulator;
         canvas.width = canvas.height = circleWidth;
-      } else if (window.innerWidth < 479) {
-        mobile = true;
-        circleWidth = circleHeight = circleWidth / 2;
-        lineWidth /= 2;
-        canvas.width = canvas.height = circleWidth;
-        // height == width
-        // в стилях для мобилки width = initial, поэтому берём высоту
-  //      canvas.style.left =  canvas.height / 2 - canvas.offsetLeft + "px";
       } else {
-          canvas.style.left = 0 + "px";
+         mobile = false;
       }
+
       firstStart = false;
+  }
+
+  function getWidthRegulator() {
+      if (window.innerWidth < resolutions.very_small) {
+          return 2.5;
+      } else if (window.innerWidth < resolutions.small) {
+          return 2;
+      } else if (window.innerWidth < resolutions.middle) {
+          return 2;
+      } else if (window.innerWidth < resolutions.min_desktop) {
+          return 1.5;
+      }
+      return false;
   }
 
     function go(d) {
       if (d < 0) {
-        // sleep();
-      // если setTimeout задерживает на меньшее кол-во времени,
-      // то задерживаем выполнение дополнительно на
-        clearTimeout(flyInterval);
-        flyInterval = setTimeout(() => {
-          c("target diff -> " + d);
-          c("target count -> " + counter);
+        // если setTimeout задерживает на меньшее кол-во времени,
+        // то задерживаем выполнение дополнительно на
+        clearTimeout(engineStepTimeoutId);
+        engineStepTimeoutId = setTimeout(() => {
           go(0);
         }, (d * (-1)));
       } else {
-        flyInterval = setTimeout(() => {
-          fly();
+        engineStepTimeoutId = setTimeout(() => {
+          engineStep();
         }, (timerStep - d));
       }
     }
 
-  function fly() {
+  function engineStep() {
     if (cur_state === states.countdown) {
       preWork();
       return;
@@ -178,7 +228,6 @@
   }
 
   function preWork() {
-    console.log("prework states.countdown");
     // до начала 3,2,1...
     if (!isInitState) {
       audio.replay();
@@ -195,6 +244,7 @@
           startTime = new Date().getTime();
           console.clear();
           audio.stop();
+          preworked = true;
           go(diff);
         }
       }, 1000);
@@ -204,79 +254,151 @@
   }
 
   function work() {
-  // console.log("work");
     if (!isInitState) {
       counterTimer = 0;
-      ctx.strokeStyle = "#ff7c20";
+      ctx.strokeStyle = colors.work;
       isInitState = true;
       curOuterLap++;
     }
 
     counterTimer = counterTimer + timerStep / 1000;
     timer = workTime - counterTimer;
-    timerFormated = Math.round(timer, -3);
-    isMomentForNextState();
+    nextState();
   }
 
   function relax() {
-//    console.log("relax");
     if (!isInitState) {
       counterTimer = relaxTime;
-      ctx.strokeStyle = "#3b99ff";
+      ctx.strokeStyle = colors.relax;
       isInitState = true;
     }
 
     counterTimer = counterTimer - timerStep / 1000;
     timer = counterTimer;
-    timerFormated = Math.round(timer, -3);
-    isMomentForNextState();
-    // circle(relaxTime);
+    nextState();
   }
 
-  function isMomentForNextState() {
+  function recovery() {
+    if (!isInitState) {
+      counterTimer = recoveryTime;
+      ctx.strokeStyle = colors.recovery;
+      isInitState = true;
+    }
 
-    if (stopping()) return;
+    counterTimer = counterTimer - timerStep / 1000;
+    timer = counterTimer;
+    nextState();
+  }
+
+  function turnPause() {
+    if (paused) {
+        pauseStartTime = new Date().getTime();
+    } else {
+        cur_state = pauseTempState;
+        pauseTempState = '';
+        pauseStopTime = new Date().getTime();
+        pausedTime = pausedTime + pauseStartTime - pauseStopTime;
+        nextState();
+    }
+  }
+
+  // по нажатию кнопки пользователем
+  function setPauseState() {
+    paused = !paused;
+    if (paused) {
+        pauseTempState = cur_state;
+        cur_state = states.pause;
+    } else {
+        turnPause();
+    }
+
+  }
+
+  function nextState() {
+
+    if (paused) {
+        go(getDiff());
+        return;
+    }
+
+    if (stopping()) {
+        return;
+    }
 
     let balance = 0;
     let nextState = 'new';
     let stateTime = 0;
 
     if (cur_state === states.relax) {
-      balance = Math.abs((ideal) / 1000 - (workTime + relaxTime) * curOuterLap);
+      balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap));
       nextState = states.work;
     }
 
     if (cur_state === states.work) {
-      balance = Math.abs((ideal) / 1000 - ((workTime + relaxTime) * (curOuterLap - 1) + workTime));
+      balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1)  + innerLapTime * (curInnerLap - 1) + workTime ));
       nextState = states.relax;
     }
 
-    circle(stateTime = cur_state === states.work ? workTime : relaxTime);
+    if (cur_state === states.recovery) {
+      balance = Math.abs((ideal) / 1000 - lapTime * lap);
+      nextState = states.work;
+    }
 
+    circle(stateTime = getTimeOfState(cur_state));
+
+    // определяем промежуток таймера, когда воспроизводим звук щелчка
     if ((balance <= 6 && stateTime > 10) || (balance <= 3 && stateTime > 5 && stateTime <= 10)) {
-      if (balance%1<0.5) {audio.replay();} else {audio.stop();}
-
+      if (balance % 1 < 0.5) {
+          audio.replay();
+      } else {
+          audio.stop();
+      }
     }
 
     if (balance === 0) {
+      // смена состояния работа-отдых
+      c('balance = 0');
       state.update(state => nextState);
       counterTimer = 0;
       isInitState = false;
       audio.stop();
+
+      // проверка на завершение внешнего круга
+      // переход к долгому отдыху
       if (nextState === states.work) {
           if (curInnerLap === maxInnerLap) {
             curInnerLap = 1;
+            lap++;
           } else {
             curInnerLap++;
+          }
+      } else if (nextState === states.relax) {
+          if (curInnerLap === maxInnerLap) {
+            state.update(state => states.recovery);
           }
       }
     }
 
+
     go(getDiff());
   }
 
+  function getTimeOfState(state) {
+      if (state === states.work) {
+          return workTime;
+      }
+
+      if (state === states.relax) {
+          return relaxTime;
+      }
+
+      if (state === states.recovery) {
+          return recoveryTime;
+      }
+  }
+
   function getDiff() {
-    real = (new Date().getTime() - startTime) ;
+    real = (new Date().getTime() - startTime + pausedTime) ;
     return real - ideal;
   }
 
@@ -298,18 +420,14 @@
     timer = 0;
     sumTime = 0;
     audio.stop();
-    clearInterval(flyInterval);
-    ctx.strokeStyle = "#00b60a";
+    clearInterval(engineStepTimeoutId);
+    ctx.strokeStyle = colors.stop;
     circle(workTime);
     state.update(state => states.end);
+    preworked = false;
+    started = false;
 
-
-    if (mobile) {
-        setTimeout(()=>{
-            document.getElementById("btn_start").scrollIntoView({behavior: "smooth"});
-        }, 1000);
-    }
-
+    scrollTo('btn_start');
 
     runAttempts.set(
                       Number.parseInt(
@@ -320,8 +438,15 @@
     localStorage.setItem('runAttempts', $runAttempts);
   }
 
+  function scrollTo(id) {
+      if (mobile) {
+          setTimeout(()=>{
+              document.getElementById(id).scrollIntoView({behavior: "smooth"});
+          }, 500);
+      }
+  }
+
   function circle(timeValue) {
-  //    console.log("circle");
     ctx.beginPath();
     ctx.clearRect(0, 0, circleWidth, circleHeight);
     let rad = (counterTimer * (180 / timeValue) * (Math.PI * 2)) / 180;
@@ -368,7 +493,56 @@
     font-weight: 100;
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 641px) and (max-width: 980px) {
+    .time-block {
+      font-size: 1.5em !important;
+      width: 200px !important;
+      height: 200px !important;
+      /*margin: 50px auto;*/
+    }
+
+    .common-block-data {
+      font-size: 0.7em;
+    }
+
+    .circle-height {
+      height: 200px !important;
+      /*margin: 0 auto;*/
+      width: 200px;
+      /*margin: 50px auto;*/
+    }
+
+    .settings-block--time {
+      font-size: 1em !important;
+      width: 200px !important;
+      height: 200px !important;
+    }
+  }
+
+  @media (min-width: 480px) and (max-width: 640px) {
+      .time-block {
+        font-size: 1.5em !important;
+        width: 140px !important;
+        height: 140px !important;
+        /*margin: 30px auto;*/
+      }
+
+      .common-block-data {
+        font-size: 0.7em;
+      }
+
+      .circle-height {
+        height: 140px !important;
+        /*margin: 0 auto;*/
+        width: 140px;
+      }
+
+      .settings-block--time {
+        font-size: 1em !important;
+        width: 140px !important;
+        height: 140px !important;
+        /*margin: 0 auto !important;*/
+      }
   }
 
   @media screen and (min-width: 291px) and (max-width: 479px) {
@@ -376,7 +550,7 @@
       font-size: 1.5em !important;
       width: 150px !important;
       height: 150px !important;
-      margin: 0 auto;
+      margin: 25px auto;
     }
 
     .clock-common {
@@ -411,7 +585,7 @@
         font-size: 1.2em !important;
         width: 120px !important;
         height: 120px !important;
-        margin: 0 auto;
+        margin: 5px auto;
       }
 
       .clock-common {
@@ -539,9 +713,26 @@
     transition: top 1s cubic-bezier(0, 0, 1, 1) 500ms;
     top: -1000px !important;
   }
+
+  .innerlap-counter {
+    color: white;
+    height: 1.5em;
+    width: 33%;
+    background-color: darkseagreen;
+    border-radius: 25%;
+    /*border:1px solid #f4eefa;*/
+  }
+
+  .innerlap-counter-container {
+    margin-top: 2em;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
 </style>
 
-{#if !sumTime && !preWorkTime}
+{#if ( !started)}
   <div
     class="settings-side"
     id="settings"
@@ -552,30 +743,6 @@
     }
   >
     <h2 transition:fade>Параметры</h2>
-
-<!--    <Textfield
-      type="number"
-      input$min="0"
-      input$max="60"
-      class="shaped-outlined"
-      style="margin: 1em;"
-      variant="outlined"
-      bind:value={workTime}
-      label="Время работы"
-      input$aria-controls="helper-text-shaped-outlined-a"
-      input$aria-describedby="helper-text-shaped-outlined-a" />
-    <Textfield
-      type="number"
-      input$min="0"
-      input$max="60"
-      class="shaped-outlined"
-      style="margin: 1em;"
-      variant="outlined"
-      bind:value={relaxTime}
-      label="Время отдыха"
-      input$aria-controls="helper-text-shaped-outlined-a"
-      input$aria-describedby="helper-text-shaped-outlined-a" />
--->
 
   <div class="settings-block-container">
 
@@ -630,9 +797,18 @@
     <Button
         on:click =  {start}
         variant =   "unelevated"
-        disabled =  "{!validateWorkTime()}"
+        disabled =  "{started}"
     >
       <Label>Старт</Label>
+    </Button>
+
+    <Button
+        on:click =  {setPauseState}
+        variant =   "outlined"
+        disabled =  "{!preworked || cur_state === states.recovery}"
+        color = 'secondary'
+    >
+      <Label>Пауза</Label>
     </Button>
 
 
@@ -642,7 +818,7 @@
 
 <div class="tablo-side">
 
-  <div class="clock-common">
+  <div class="clock-common" id="clock-common">
 
     <div
       class="time-block "
@@ -659,16 +835,18 @@
         {#if preWorkTime}
           <p
             style="font-size: 0.5em"
-            transition:slide={{ delay: 0, duration: 10 }}>
+           >
             Начинаем через
           </p>
-          <span transition:slide={{ delay: 0, duration: 10 }}>
+          <span>
             {preWorkTime}
           </span>
         {/if}
 
         {#if null !== timer}
-          <p transition:slide={{ delay: 0, duration: 10 }}>{timerFormated}</p>
+          <p>
+            {timerFormatted()}
+          </p>
         {/if}
       </div>
     </div>
@@ -683,14 +861,26 @@
     </div>
 
   </div>
-  <p>start: {startTime}   sumTime: {sumTime}   remaining: {remaining}</p>
-  <p>real: {real}</p>
-  <p>ideal: {ideal}</p>
-  <p>diff: {diff}</p>
-  <br>
-  <p>lap: {curInnerLap}</p>
+
 
   <div class="common-block-data">
+    <div class="innerlap-counter-container">
+        {#if curInnerLap>0 && preworked || curInnerLap>2}
+            <div class="innerlap-counter" transition:fade>
+                1
+            </div>
+        {/if}
+        {#if curInnerLap>1}
+            <div class="innerlap-counter" transition:fade>
+                2
+            </div>
+        {/if}
+        {#if curInnerLap>2}
+            <div class="innerlap-counter" transition:fade>
+                3
+            </div>
+        {/if}
+    </div>
     <div class="common-block-data-list">
       {#if !mobile}
         <span>Общее время: {minutes} мин {seconds} сек</span>
@@ -701,9 +891,7 @@
   </div>
 
   <audio id="audio">
-    <!-- <source src="audio/music.ogg" type="audio/ogg; codecs=vorbis"> -->
     <source src="/sounds/sek.mp3" type="audio/mpeg">
-    Тег audio не поддерживается вашим браузером. 
-    <!-- <a href="audio/music.mp3">Скачайте музыку</a>. -->
+    Тег audio не поддерживается вашим браузером.
   </audio>
 </div>

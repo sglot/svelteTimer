@@ -4,6 +4,7 @@ var list = {
     countdown: 'Обратный отсчёт',
     work: 'Нагрузка',
     relax: 'Отдых',
+    recovery : 'Восстановление сил',
     pause: 'Пауза',
     end: 'Конец'
 };

@@ -14,18 +14,16 @@
 	<p>Svelte Timer. Powered by "Chto, opyat?"</p>
 	<Button on:click={() => {showTimer = !showTimer;}}>{name} click</Button>
 
-{#if showTimer}
-	<Timer/>
-{/if}
-
-
+    {#if showTimer}
+        <Timer/>
+    {/if}
 </main>
 
 <style>
 	main {
 		text-align: center;
 		padding: 1em;
-		max-width: 240px;
+		/*max-width: 1240px;*/
 		margin: 0 auto;
 	}
 
