@@ -3,12 +3,12 @@
   import { stateList } from "./stores/stores.js";
   import { mute } from "./stores/stores.js";
   import { runAttempts } from "./stores/stores.js";
+  import { conf }  from "./config/config.js";
+
+  import { Sound } from "./core/Sound.js";
 
   import Textfield from "@smui/textfield";
   import Button, { Label } from "@smui/button";
-
-  import { Sound } from "./core/Sound.js"; 
-  // import { engine } from "./core/engine.js"; 
 
   import { tweened } from "svelte/motion";
   import { cubicOut } from "svelte/easing";
@@ -18,16 +18,21 @@
   import { quintOut } from "svelte/easing";
   import { crossfade } from "svelte/transition";
   import { flip } from "svelte/animate";
+  import { onMount } from 'svelte';
+  // import { engine } from "./core/engine.js";
 
-  let workTime = 2;
-  let relaxTime = 2;
+  let circleWidth = conf.circleWidth;
+  let circleHeight = conf.circleHeight;
+  let lineWidth = conf.lineWidth;
+
+  let workTime = 30;
+  let relaxTime = 30;
   let laps = 3;
 
-  const maxInnerLap = 3;
-  const recoveryTime = 1 * 6;
   let curInnerLap = 1;
   let curOuterLap = 0;
   let lap = 0;
+
 
   let preWorkTime = null;
   let remaining = null;
@@ -42,16 +47,13 @@
   let engineStepTimeoutId;
   let isInitState;
 
-  let cur_state;
+  let currentState;
   let states;
 
   let canvas;
   let ctx;
   let mobile = false;
 
-  let circleWidth = 300;
-  let circleHeight = 300;
-  let lineWidth = 8;
 
   let timerStep;
   let sumTime = 0;
@@ -65,6 +67,7 @@
   let started = false;
   let preworked = false;
   let paused = false;
+
   let pausedTime = 0;
   let pauseStartTime = 0;
   let pauseStopTime = 0;
@@ -86,7 +89,7 @@
   };
 
   const unsubscribe = state.subscribe(value => {
-    cur_state = value;
+    currentState = value;
   });
 
   const unsubscribeList = stateList.subscribe(value => {
@@ -107,10 +110,10 @@
 
   // время кругов
   $: innerLapTime = workTime + relaxTime;
-  $: outerLapTime = innerLapTime * (maxInnerLap - 1) + workTime;
-  $: lapTime = outerLapTime + recoveryTime;
+  $: outerLapTime = innerLapTime * (conf.maxInnerLap - 1) + workTime;
+  $: lapTime = outerLapTime + conf.recoveryTime;
 
-  $: allTime = (outerLapTime * laps + (laps - 1) * recoveryTime);
+  $: allTime = (outerLapTime * laps + (laps - 1) * conf.recoveryTime);
 
   // форматированное время
   $: hours = Math.round(allTime / 60 / 60);
@@ -127,17 +130,31 @@
           : getTwoNumberFormat(Math.round(timer / 60)) + ':' + getTwoNumberFormat(Math.round(timer % 60));
   };
 
-   function getTwoNumberFormat($number) {
-       let sek = Math.round($number % 60);
-       return sek < 10
-            ? '0' + sek
-            : sek;
-   }
+    function getTwoNumberFormat($number) {
+       let sekonds = Math.round($number % 60);
+       return sekonds < 10
+            ? '0' + sekonds
+            : sekonds;
+    }
+
+    onMount(async () => {
+        setParamsOnMount();
+    });
+
+    function setParamsOnMount() {
+        let widthRegulator = getWidthRegulator();
+        if (widthRegulator) {
+            mobile = true;
+            circleWidth = circleHeight = circleWidth / widthRegulator;
+            lineWidth /= widthRegulator;
+            c(circleWidth);
+        }
+    }
 
   function start() {
     started = true;
     init();
-    cur_state = states.countdown;
+    currentState = states.countdown;
     scrollTo('clock-common');
     go(0);
   }
@@ -155,13 +172,13 @@
       timer = null;
       isInitState = false;
       preworked = false;
-//      mobile = true;
+
       audio = new Sound($mute, '/sounds/sek.mp3');
 
-        pausedTime = 0;
-        pauseStartTime = 0;
-        pauseStopTime = 0;
-        pauseTempState ='';
+      pausedTime = 0;
+      pauseStartTime = 0;
+      pauseStopTime = 0;
+      pauseTempState ='';
 
       if (!firstStart) {
           return;
@@ -172,17 +189,6 @@
       canvas.height = circleWidth;
       ctx = canvas.getContext("2d");
       canvas.style.left = 0 + "px";
-
-      let widthRegulator = getWidthRegulator();
-      if (widthRegulator) {
-        mobile = true;
-        circleWidth = circleHeight = circleWidth / widthRegulator;
-        lineWidth /= widthRegulator;
-        canvas.width = canvas.height = circleWidth;
-      } else {
-         mobile = false;
-      }
-
       firstStart = false;
   }
 
@@ -199,23 +205,23 @@
       return false;
   }
 
-    function go(d) {
-      if (d < 0) {
+    function go(diff) {
+      if (diff < 0) {
         // если setTimeout задерживает на меньшее кол-во времени,
         // то задерживаем выполнение дополнительно на
         clearTimeout(engineStepTimeoutId);
         engineStepTimeoutId = setTimeout(() => {
           go(0);
-        }, (d * (-1)));
+        }, (diff * (-1)));
       } else {
         engineStepTimeoutId = setTimeout(() => {
           engineStep();
-        }, (timerStep - d));
+        }, (timerStep - diff));
       }
     }
 
   function engineStep() {
-    if (cur_state === states.countdown) {
+    if (currentState === states.countdown) {
       preWork();
       return;
     } 
@@ -224,7 +230,7 @@
     counter++;
     ideal = counter * timerStep;
 
-    engine[cur_state]();
+    engine[currentState]();
   }
 
   function preWork() {
@@ -239,7 +245,7 @@
         if (0 === preWorkTime) {
           clearInterval(preWorktIntervalId);
           // state.update(state => states.work);
-          cur_state = states.work;
+          currentState = states.work;
           isInitState = false;
           startTime = new Date().getTime();
           console.clear();
@@ -280,7 +286,7 @@
 
   function recovery() {
     if (!isInitState) {
-      counterTimer = recoveryTime;
+      counterTimer = conf.recoveryTime;
       ctx.strokeStyle = colors.recovery;
       isInitState = true;
     }
@@ -294,7 +300,7 @@
     if (paused) {
         pauseStartTime = new Date().getTime();
     } else {
-        cur_state = pauseTempState;
+        currentState = pauseTempState;
         pauseTempState = '';
         pauseStopTime = new Date().getTime();
         pausedTime = pausedTime + pauseStartTime - pauseStopTime;
@@ -306,8 +312,8 @@
   function setPauseState() {
     paused = !paused;
     if (paused) {
-        pauseTempState = cur_state;
-        cur_state = states.pause;
+        pauseTempState = currentState;
+        currentState = states.pause;
     } else {
         turnPause();
     }
@@ -329,22 +335,22 @@
     let nextState = 'new';
     let stateTime = 0;
 
-    if (cur_state === states.relax) {
+    if (currentState === states.relax) {
       balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap));
       nextState = states.work;
     }
 
-    if (cur_state === states.work) {
+    if (currentState === states.work) {
       balance = Math.abs((ideal) / 1000 - (lapTime * (lap - 1)  + innerLapTime * (curInnerLap - 1) + workTime ));
       nextState = states.relax;
     }
 
-    if (cur_state === states.recovery) {
+    if (currentState === states.recovery) {
       balance = Math.abs((ideal) / 1000 - lapTime * lap);
       nextState = states.work;
     }
 
-    circle(stateTime = getTimeOfState(cur_state));
+    circle(stateTime = getTimeOfState(currentState));
 
     // определяем промежуток таймера, когда воспроизводим звук щелчка
     if ((balance <= 6 && stateTime > 10) || (balance <= 3 && stateTime > 5 && stateTime <= 10)) {
@@ -366,14 +372,15 @@
       // проверка на завершение внешнего круга
       // переход к долгому отдыху
       if (nextState === states.work) {
-          if (curInnerLap === maxInnerLap) {
-            curInnerLap = 1;
+          if (curInnerLap === conf.maxInnerLap) {
+            curInnerLap = 2;
+            setTimeout(()=>{curInnerLap = 1}, 500);
             lap++;
           } else {
             curInnerLap++;
           }
       } else if (nextState === states.relax) {
-          if (curInnerLap === maxInnerLap) {
+          if (curInnerLap === conf.maxInnerLap) {
             state.update(state => states.recovery);
           }
       }
@@ -393,7 +400,7 @@
       }
 
       if (state === states.recovery) {
-          return recoveryTime;
+          return conf.recoveryTime;
       }
   }
 
@@ -517,13 +524,17 @@
       width: 200px !important;
       height: 200px !important;
     }
+
+    .shadow--active {
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 25px 1px -2px rgba(0, 0, 0, 0.2);
+    }
   }
 
   @media (min-width: 480px) and (max-width: 640px) {
       .time-block {
         font-size: 1.5em !important;
-        width: 140px !important;
-        height: 140px !important;
+        width: 150px !important;
+        height: 150px !important;
         /*margin: 30px auto;*/
       }
 
@@ -532,16 +543,20 @@
       }
 
       .circle-height {
-        height: 140px !important;
+        height: 150px !important;
         /*margin: 0 auto;*/
-        width: 140px;
+        width: 150px;
       }
 
       .settings-block--time {
         font-size: 1em !important;
-        width: 140px !important;
-        height: 140px !important;
+        width: 150px !important;
+        height: 150px !important;
         /*margin: 0 auto !important;*/
+      }
+
+      .shadow--active {
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 20px 1px -2px rgba(0, 0, 0, 0.2) !important;
       }
   }
 
@@ -576,6 +591,10 @@
       width: 150px !important;
       height: 150px !important;
       margin: 0 auto !important;
+    }
+
+    .shadow--active {
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 15px 1px -2px rgba(0, 0, 0, 0.2) !important;
     }
 
   }
@@ -614,8 +633,8 @@
         margin: 0 auto !important;
       }
 
-      .text--active {
-           box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 15px 1px -2px rgba(0, 0, 0, 0.2) !important;
+      .shadow--active {
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 10px 1px -2px rgba(0, 0, 0, 0.2) !important;
       }
     }
 
@@ -662,24 +681,27 @@
 
   .text--active {
     opacity: 1;
-        transition-property: box-shadow;
-        transition-duration: 0.6s;
-        transition-timing-function: cubic-bezier(0, 0, 1, 1);
-
-
-       border: rgba(181,181,176,0.88) 0px solid;
-       border-radius: 50%;
-       /*box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);*/
-       box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 30px 1px -2px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.5s  cubic-bezier(0, 0, 1, 1);
   }
 
   .text--disabled {
     opacity: 0.5;
-    /*font-size: 4em;*/
-    transition-property: opacity;
-    transition-duration: 0.6s;
-    transition-timing-function: cubic-bezier(0, 0, 1, 1);
+    transition: opacity 0.5s  cubic-bezier(0, 0, 1, 1);
+  }
+
+  .shadow--active {
+    transition: box-shadow 0.5s  cubic-bezier(0, 0, 1, 1);
+
+    border: rgba(181,181,176,0.88) 0px solid;
+    border-radius: 50%;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 25px 1px -2px rgba(0, 0, 0, 0.2);
+  }
+
+  .shadow--disabled {
+    transition: box-shadow 0.5s  cubic-bezier(0, 0, 1, 1);
+
     border: white 0px solid;
+    border-radius: 50%;
   }
 
   progress {
@@ -716,23 +738,36 @@
 
   .innerlap-counter {
     color: white;
-    height: 1.5em;
-    width: 33%;
-    background-color: darkseagreen;
-    border-radius: 25%;
-    /*border:1px solid #f4eefa;*/
+    height: 3em;
+    width: 3em;
+    margin: 0 1em;
   }
 
   .innerlap-counter-container {
-    margin-top: 2em;
+    margin-top: 3em;
+    height: 3em;
     position: relative;
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: center;
+  }
+
+  .innerlap-counter-circle {
+    -webkit-box-shadow: 0px 0px 2px 1px rgba(0, 0, 0, 0.65);
+    -moz-box-shadow: 0px 0px 2px 1px rgba(0, 0, 0, 0.65);
+    box-shadow: 0px 0px 2px 1px rgba(0, 0, 0, 0.65);
+
+    width: 3em;
+    height: 3em;
+    line-height: 3em;
+    text-align: center;
+    margin: 0 auto;
+    border-radius: 60%;
+    color: rgba(0, 0, 0, 0.65);
   }
 </style>
 
-{#if ( !started)}
+{#if (!started)}
   <div
     class="settings-side"
     id="settings"
@@ -742,94 +777,102 @@
         : { delay: 250, duration: 1000 }
     }
   >
-    <h2 transition:fade>Параметры</h2>
+      <h2 transition:fade>Параметры</h2>
 
-  <div class="settings-block-container">
+      <div class="settings-block-container">
 
-    <div style="display: flex; flex-flow: column;">
-        <div
-          class="settings-block--time"
-          class:text--disabled={!validateWorkTime()}
-          class:text--active={validateWorkTime()}
-          transition:fade
-        >
-            <label style="font-size: 4em;">{workTime}</label>
-        </div>
+        <div style="display: flex; flex-flow: column;">
+            <div
+              class="settings-block--time"
+              class:text--disabled={!validateWorkTime()}
+              class:text--active={validateWorkTime()}
+              class:shadow--disabled={!validateWorkTime()}
+              class:shadow--active={validateWorkTime()}
+              transition:fade
+            >
+                <label style="font-size: 4em;">
+                    {workTime}
+                </label>
+            </div>
             <span style="width: 100%; margin-top: 1.5em;">Время нагрузки</span>
-          <input
-              type=range min=1 max=60
-              bind:value={workTime}
+            <input
+                  type=range min=1 max=60
+                  bind:value={workTime}
 
-              style="width: 90%; margin-top: 1.5em;"
-          />
-    </div>
-
-    <div style="display: flex; flex-flow: column;">
-        <div
-          class="settings-block--time"
-          class:text--disabled={!validateWorkTime()}
-          class:text--active={validateWorkTime()}
-          transition:fade
-        >
-            <label style="font-size: 4em; ">{relaxTime}</label>
+                  style="width: 100%; margin-top: 1.5em;"
+            />
         </div>
-        <span style="width: 100%; margin-top: 1.5em;">Время отдыха</span>
-        <input
-              type=range min=1 max=60
-              bind:value={relaxTime}
 
-              style="width: 100%; margin-top: 1.5em;"
-          />
+        <div style="display: flex; flex-flow: column;">
+            <div
+              class="settings-block--time"
+              class:text--disabled={!validateWorkTime()}
+              class:text--active={validateWorkTime()}
+              class:shadow--disabled={!validateWorkTime()}
+              class:shadow--active={validateWorkTime()}
+              transition:fade
+            >
+                <label style="font-size: 4em; ">
+                    {relaxTime}
+                </label>
+            </div>
+            <span style="width: 100%; margin-top: 1.5em;">Время отдыха</span>
+            <input
+                  type=range min=1 max=60
+                  bind:value={relaxTime}
+
+                  style="width: 100%; margin-top: 1.5em;"
+              />
+        </div>
       </div>
-    </div>
 
-    <h3 class="status">Кругов: {laps}</h3>
+      <h3 class="status">Кругов: {laps}</h3>
 
-    <label>
-      <input type="range" bind:value={laps} min="1" max="10" />
-    </label>
-    {#if error_boolean}
+      <label>
+        <input type="range" bind:value={laps} min="1" max="10" />
+      </label>
+
+      {#if error_boolean}
         <h1> OH NO! AN ERRROR!</h1>
       {/if}
-
-
-    <div id="btn_start"></div>
-    <Button
-        on:click =  {start}
-        variant =   "unelevated"
-        disabled =  "{started}"
-    >
-      <Label>Старт</Label>
-    </Button>
-
-    <Button
-        on:click =  {setPauseState}
-        variant =   "outlined"
-        disabled =  "{!preworked || cur_state === states.recovery}"
-        color = 'secondary'
-    >
-      <Label>Пауза</Label>
-    </Button>
-
-
 
   </div>
 {/if}
 
+<div id="btn_start"></div>
+<Button
+    on:click =  {start}
+    variant =   "unelevated"
+    disabled =  "{started}"
+>
+  <Label>Старт</Label>
+</Button>
+
+<Button
+    on:click =  {setPauseState}
+    variant =   "outlined"
+    disabled =  "{!preworked || currentState === states.recovery}"
+    color = 'secondary'
+>
+  <Label>Пауза</Label>
+</Button>
+
+
 <div class="tablo-side">
-
   <div class="clock-common" id="clock-common">
-
     <div
       class="time-block "
-      class:text--disabled={cur_state !== states.work}
-      class:text--active={cur_state === states.work}
-      transition:fade>
-        <p>{states.work}</p>
+      class:shadow--disabled={currentState !== states.work}
+      class:shadow--active={currentState === states.work}>
+        <p
+           class:text--disabled={currentState !== states.work}
+           class:text--active={currentState === states.work}>
+            {states.work}
+        </p>
     </div>
 
     <div style="position: relative;" class=" circle-height">
-      <canvas class="clock-circle text--active" width="0" id="cv" />
+      <canvas class="clock-circle text--active shadow--active" width="0" id="cv" />
 
       <div class="time-block circle-height" >
         {#if preWorkTime}
@@ -854,10 +897,13 @@
 
     <div
       class="time-block"
-      class:text--disabled={cur_state !== states.relax}
-      class:text--active={cur_state === states.relax}
-      transition:fade>
-        <p>{states.relax}</p>
+            class:shadow--disabled={currentState !== states.relax}
+            class:shadow--active={currentState === states.relax}>
+        <p
+          class:text--disabled={currentState !== states.relax}
+          class:text--active={currentState === states.relax}>
+            {states.relax}
+        </p>
     </div>
 
   </div>
@@ -865,22 +911,28 @@
 
   <div class="common-block-data">
     <div class="innerlap-counter-container">
-        {#if curInnerLap>0 && preworked || curInnerLap>2}
-            <div class="innerlap-counter" transition:fade>
-                1
+            <div class="innerlap-counter" >
+                <div  class="innerlap-counter-circle text--disabled"
+                      class:text--disabled={!(curInnerLap>0 && preworked || curInnerLap>2)}
+                      class:text--active={curInnerLap>0 && preworked || curInnerLap>2}
+                >1</div>
             </div>
-        {/if}
-        {#if curInnerLap>1}
-            <div class="innerlap-counter" transition:fade>
-                2
+
+            <div class="innerlap-counter">
+                <div  class="innerlap-counter-circle text--disabled"
+                      class:text--disabled={!(curInnerLap>1)}
+                      class:text--active={curInnerLap>1}
+                >2</div>
             </div>
-        {/if}
-        {#if curInnerLap>2}
-            <div class="innerlap-counter" transition:fade>
-                3
+
+            <div class="innerlap-counter">
+                <div  class="innerlap-counter-circle text--disabled"
+                      class:text--disabled={!(curInnerLap>2)}
+                      class:text--active={curInnerLap>2}
+                >3</div>
             </div>
-        {/if}
     </div>
+
     <div class="common-block-data-list">
       {#if !mobile}
         <span>Общее время: {minutes} мин {seconds} сек</span>
