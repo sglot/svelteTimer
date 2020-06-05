@@ -1,5 +1,5 @@
 <div class="info-header">
-    <span>v. 0.36 | </span>
+    <span>v. 0.38 | </span>
     <span>Запуск
         <span
             style="text-decoration:underline steelblue"
