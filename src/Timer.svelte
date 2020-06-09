@@ -753,9 +753,9 @@
   }
 
   .innerlap-counter-circle {
-    -webkit-box-shadow: 0px 0px 2px 1px rgba(0, 0, 0, 0.65);
-    -moz-box-shadow: 0px 0px 2px 1px rgba(0, 0, 0, 0.65);
-    box-shadow: 0px 0px 2px 1px rgba(0, 0, 0, 0.65);
+    -webkit-box-shadow: 0px 0px 1px 5px rgb(139, 136, 255);
+    -moz-box-shadow: 0px 0px 1px 5px rgb(139, 136, 255);
+    box-shadow: 0px 0px 1px 5px rgb(139, 136, 255);
 
     width: 3em;
     height: 3em;
@@ -763,7 +763,17 @@
     text-align: center;
     margin: 0 auto;
     border-radius: 60%;
-    color: rgba(0, 0, 0, 0.65);
+    color: rgb(77, 74, 204);
+    font-weight: bold;
+  }
+
+  .label-time-text {
+    font-weight: lighter;
+  }
+
+  .data-time-text {
+    font-weight: normal;
+    font-style: italic;
   }
 </style>
 
@@ -935,9 +945,9 @@
 
     <div class="common-block-data-list">
       {#if !mobile}
-        <span>Общее время: {minutes} мин {seconds} сек</span>
+        <span class="label-time-text">Общее время: <span class="data-time-text">{minutes} мин {seconds} сек</span></span>
       {/if}
-      <span>Осталось: {rMinutes} мин {rSeconds} сек</span>
+      <span class="label-time-text">Осталось: <span class="data-time-text">{rMinutes} мин {rSeconds} сек</span></span>
     </div>
     <progress value={$progress} />
   </div>
