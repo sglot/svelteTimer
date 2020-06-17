@@ -127,15 +127,21 @@
   $: timerFormatted = () => {
       return timer < 61
           ? Math.round(timer, -3)
-          : getTwoNumberFormat(Math.round(timer / 60)) + ':' + getTwoNumberFormat(Math.round(timer % 60));
+          : getTwoNumberMinutesFormat(Math.trunc(timer / 60)) + ':' + getTwoNumberSecondsFormat(Math.trunc(timer % 60));
   };
 
-    function getTwoNumberFormat($number) {
-       let sekonds = Math.round($number % 60);
-       return sekonds < 10
-            ? '0' + sekonds
-            : sekonds;
+    function getTwoNumberSecondsFormat($number) {
+       let seconds = Math.trunc($number % 60);
+       return seconds < 10
+            ? '0' + seconds
+            : seconds;
     }
+
+    function getTwoNumberMinutesFormat(minutes) {
+        return minutes < 10
+            ? '0' + minutes
+            : minutes;
+        }
 
     onMount(async () => {
         setParamsOnMount();
@@ -286,12 +292,14 @@
 
   function recovery() {
     if (!isInitState) {
-      counterTimer = conf.recoveryTime;
+      counterTimer = conf.recoveryTime + 0.8; // добавочное время, чтобы можно было увидеть изходные 03:00
       ctx.strokeStyle = colors.recovery;
       isInitState = true;
+    } else {
+        counterTimer = counterTimer - timerStep / 1000;
     }
 
-    counterTimer = counterTimer - timerStep / 1000;
+
     timer = counterTimer;
     nextState();
   }
@@ -558,6 +566,10 @@
       .shadow--active {
         box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 20px 1px -2px rgba(0, 0, 0, 0.2) !important;
       }
+
+        .innerlap-counter-container {
+          margin-top: 1em!important;
+        }
   }
 
   @media screen and (min-width: 291px) and (max-width: 479px) {
@@ -597,6 +609,10 @@
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 15px 1px -2px rgba(0, 0, 0, 0.2) !important;
     }
 
+      .innerlap-counter-container {
+        margin-top: 1em!important;
+      }
+
   }
 
   @media screen and (max-width: 290px) {
@@ -635,6 +651,10 @@
 
       .shadow--active {
         box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 10px 1px -2px rgba(0, 0, 0, 0.2) !important;
+      }
+
+      .innerlap-counter-container {
+        margin-top: 1em!important;
       }
     }
 
@@ -745,6 +765,7 @@
 
   .innerlap-counter-container {
     margin-top: 3em;
+    margin-bottom: 1em;
     height: 3em;
     position: relative;
     display: flex;
