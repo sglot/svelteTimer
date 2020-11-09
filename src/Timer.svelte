@@ -1,11 +1,11 @@
 <script>
-  import { state } from "./stores/stores.js";
-  import { stateList } from "./stores/stores.js";
-  import { mute } from "./stores/stores.js";
-  import { runAttempts } from "./stores/stores.js";
+  import { state } from "./stores/stores.ts";
+  import { stateList } from "./stores/stores.ts";
+  import { mute } from "./stores/stores.ts";
+  import { runAttempts } from "./stores/stores.ts";
   import { conf }  from "./config/config.js";
 
-  import { Sound } from "./core/Sound.js";
+  import { Sound } from "./core/Sound.ts";
 
   import Textfield from "@smui/textfield";
   import Button, { Label } from "@smui/button";
@@ -179,7 +179,7 @@
       isInitState = false;
       preworked = false;
 
-      audio = new Sound($mute, '/sounds/sek.mp3');
+      audio = new Sound($mute, '/sounds/tick-tick.mp3');
 
       pausedTime = 0;
       pauseStartTime = 0;
@@ -774,9 +774,9 @@
   }
 
   .innerlap-counter-circle {
-    -webkit-box-shadow: 0px 0px 1px 5px rgb(139, 136, 255);
-    -moz-box-shadow: 0px 0px 1px 5px rgb(139, 136, 255);
-    box-shadow: 0px 0px 1px 5px rgb(139, 136, 255);
+    -webkit-box-shadow: 0px 0px 1px 5px rgb(27, 235, 20);
+    -moz-box-shadow: 0px 0px 1px 5px rgb(27, 235, 20);
+    box-shadow: 0px 0px 1px 5px rgb(27, 235, 20);
 
     width: 3em;
     height: 3em;
@@ -973,8 +973,8 @@
     <progress value={$progress} />
   </div>
 
-  <audio id="audio">
+  <!-- <audio id="audio">
     <source src="/sounds/sek.mp3" type="audio/mpeg">
     Тег audio не поддерживается вашим браузером.
-  </audio>
+  </audio> -->
 </div>

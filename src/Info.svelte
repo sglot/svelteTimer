@@ -24,27 +24,27 @@
     }
 </style>
 
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
-    import { mute } from "./stores/stores.js";
-    import { runAttempts } from "./stores/stores.js";
+    import { mute } from "./stores/stores";
+    import { runAttempts } from "./stores/stores";
 
 	onMount(() => {
         // инициализация количества попыток запуска на текущем устройстве
-        runAttempts.set(localStorage.getItem('runAttempts'));
+        runAttempts.set(parseInt(localStorage.getItem('runAttempts')));
         if (!isFinite($runAttempts) || $runAttempts === null) {
             runAttempts.set(0);
-            localStorage.setItem('runAttempts', 0);
+            localStorage.setItem('runAttempts', '0');
         }
 
         //инициализация звук вкл/выкл
         mute.set(localStorage.getItem('mute') === 'true' ? true : false);
-        localStorage.setItem('mute', $mute);
+        localStorage.setItem('mute', mute.toString());
     });
     
-    function changeMute() {
+    function changeMute(): void {
         mute.set(!$mute);
-        localStorage.setItem('mute', mute);
+        localStorage.setItem('mute', mute.toString());
     }
     
 </script>

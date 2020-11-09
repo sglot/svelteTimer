@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
     import Button from '@smui/button';
     import Timer from './Timer.svelte';
 	import Info from './Info.svelte';
-    let showTimer = true;
+	let showTimer = true;
 
     export let name;
 

@@ -4,6 +4,8 @@ import commonjs from '@rollup/plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import postcss from 'rollup-plugin-postcss';
+import autoPreprocess from 'svelte-preprocess';
+import typescript from '@rollup/plugin-typescript';
 
 const production = !process.env.ROLLUP_WATCH;
 const postcssOptions = () => ({
@@ -40,7 +42,10 @@ export default {
 			css: css => {
 				css.write('public/build/bundle.css');
 			},
+			preprocess: autoPreprocess(),
 		}),
+
+		typescript({ sourceMap: !production }),
 
 		// If you have external dependencies installed from
 		// npm, you'll most likely need these plugins. In
@@ -51,8 +56,10 @@ export default {
 			browser: true,
 			dedupe: ['svelte']
 		}),
+
 		commonjs(),
-        postcss(postcssOptions()),
+		
+		postcss(postcssOptions()),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
