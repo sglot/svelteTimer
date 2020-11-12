@@ -42,9 +42,9 @@
   let audio: Sound;
   let circle: Circle;
 
-  let startIntervalId;
+  // let startIntervalId;
   let preWorktIntervalId;
-  let timerIntervalId;
+  // let timerIntervalId;
 
   let engineStepTimeoutId;
   let isInitState;
@@ -74,19 +74,19 @@
   let pauseStopTime = 0;
   let pauseTempState;
 
-  const resolutions = {
-    very_small: 290,
-    small: 479,
-    middle: 640,
-    min_desktop: 980,
-  };
+  // const resolutions = {
+  //   very_small: 290,
+  //   small: 479,
+  //   middle: 640,
+  //   min_desktop: 980,
+  // };
 
-  const colors = {
-    work: "#ff7c20",
-    relax: "#3b99ff",
-    recovery: "#92ccff",
-    stop: "#00b60a",
-  };
+  // const colors = {
+  //   work: "#ff7c20",
+  //   relax: "#3b99ff",
+  //   recovery: "#92ccff",
+  //   stop: "#00b60a",
+  // };
 
   const unsubscribe = state.subscribe((value) => {
     currentState = value;
@@ -163,13 +163,13 @@
   }
 
   function getWidthRegulator() {
-    if (window.innerWidth < resolutions.very_small) {
+    if (window.innerWidth < conf.resolutions.very_small) {
       return 2.5;
-    } else if (window.innerWidth < resolutions.small) {
+    } else if (window.innerWidth < conf.resolutions.small) {
       return 2;
-    } else if (window.innerWidth < resolutions.middle) {
+    } else if (window.innerWidth < conf.resolutions.middle) {
       return 2;
-    } else if (window.innerWidth < resolutions.min_desktop) {
+    } else if (window.innerWidth < conf.resolutions.min_desktop) {
       return 1.5;
     }
     return false;
@@ -180,7 +180,7 @@
     init();
     currentState = states.countdown;
     scrollTo("clock-common");
-    go(0);
+    goIteration(0);
   }
 
   function init() {
@@ -217,13 +217,13 @@
     firstStart = false;
   }
 
-  function go(diff: number) {
+  function goIteration(diff: number) {
     if (diff < 0) {
       // если setTimeout задерживает на меньшее кол-во времени,
       // то задерживаем выполнение дополнительно на
       clearTimeout(engineStepTimeoutId);
       engineStepTimeoutId = setTimeout(() => {
-        go(0);
+        goIteration(0);
       }, diff * -1);
     } else {
       engineStepTimeoutId = setTimeout(() => {
@@ -245,36 +245,39 @@
     engine[currentState]();
   }
 
+  // до начала 3,2,1...
   function preWork() {
-    // до начала 3,2,1...
-    if (!isInitState) {
-      audio.replay();
-
-      preWorktIntervalId = setInterval(() => {
-        audio.replay();
-        preWorkTime--;
-
-        if (0 === preWorkTime) {
-          clearInterval(preWorktIntervalId);
-          // state.update(state => states.work);
-          currentState = states.work;
-          isInitState = false;
-          startTime = new Date().getTime();
-          console.clear();
-          audio.stop();
-          preworked = true;
-          go(diff);
-        }
-      }, 1000);
-
-      isInitState = true;
+    
+    if (isInitState) {
+      return;
     }
+
+    audio.replay();
+
+    preWorktIntervalId = setInterval(() => {
+      audio.replay();
+      preWorkTime--;
+
+      if (0 === preWorkTime) {
+        clearInterval(preWorktIntervalId);
+        // state.update(state => states.work);
+        currentState = states.work;
+        isInitState = false;
+        startTime = new Date().getTime();
+        console.clear();
+        audio.stop();
+        preworked = true;
+        goIteration(diff);
+      }
+    }, 1000);
+
+    isInitState = true;
   }
 
   function work() {
     if (!isInitState) {
       counterTimer = 0;
-      ctx.strokeStyle = colors.work;
+      ctx.strokeStyle = conf.colors.work;
       isInitState = true;
       curOuterLap++;
     }
@@ -287,7 +290,7 @@
   function relax() {
     if (!isInitState) {
       counterTimer = relaxTime;
-      ctx.strokeStyle = colors.relax;
+      ctx.strokeStyle = conf.colors.relax;
       isInitState = true;
     }
 
@@ -298,8 +301,8 @@
 
   function recovery() {
     if (!isInitState) {
-      counterTimer = conf.recoveryTime + 0.8; // добавочное время, чтобы можно было увидеть изходные 03:00
-      ctx.strokeStyle = colors.recovery;
+      counterTimer = conf.recoveryTime + 0.8; // добавочное время, чтобы можно было увидеть иcходные 03:00
+      ctx.strokeStyle = conf.colors.recovery;
       isInitState = true;
     } else {
       counterTimer = counterTimer - timerStep / 1000;
@@ -309,39 +312,15 @@
     nextState();
   }
 
-  function turnPause() {
-    if (paused) {
-      pauseStartTime = new Date().getTime();
-    } else {
-      currentState = pauseTempState;
-      pauseTempState = "";
-      pauseStopTime = new Date().getTime();
-      pausedTime = pausedTime + pauseStartTime - pauseStopTime;
-      nextState();
-    }
-  }
-
-  // по нажатию кнопки пользователем
-  function setPauseState() {
-    paused = !paused;
-    if (paused) {
-      pauseTempState = currentState;
-      currentState = states.pause;
-    } else {
-      turnPause();
-    }
-  }
-
   function nextState() {
     if (paused) {
-      go(getDiff());
+      goIteration(getDiff());
       return;
     }
 
     if (stopping()) {
       return;
     }
-
 
 
     let temp: oneLoopValues = {      
@@ -351,66 +330,18 @@
     };
 
     temp = calcTempData();
-    // let temp: [number, number, string] = [0, 0, "new"];
-    // let balance = 0;
-    // let nextState = "new";
-    // let stateTime = 0;
 
-    // if (currentState === states.relax) {
-    //   balance = Math.abs(
-    //     ideal / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap)
-    //   );
-    //   nextState = states.work;
-    // }
-
-    // if (currentState === states.work) {
-    //   balance = Math.abs(
-    //     ideal / 1000 -
-    //       (lapTime * (lap - 1) + innerLapTime * (curInnerLap - 1) + workTime)
-    //   );
-    //   nextState = states.relax;
-    // }
-
-    // if (currentState === states.recovery) {
-    //   balance = Math.abs(ideal / 1000 - lapTime * lap);
-    //   nextState = states.work;
-    // }
-
-    // рисуем
-    // stateTime = getTimeOfState(currentState);
     circle.recalcValues(counterTimer, temp.stateTime);
     circle.draw();
 
     maybeSound(temp);
 
-    if (temp.balance === 0) {
-      // смена состояния работа-отдых
-      c("balance = 0");
-      state.update((state) => temp.nextState);
-      counterTimer = 0;
-      isInitState = false;
-      audio.stop();
 
-      // проверка на завершение внешнего круга
-      // переход к долгому отдыху
-      if (temp.nextState === states.work) {
-        if (curInnerLap === conf.maxInnerLap) {
-          curInnerLap = 2;
-          setTimeout(() => {
-            curInnerLap = 1;
-          }, 500);
-          lap++;
-        } else {
-          curInnerLap++;
-        }
-      } else if (temp.nextState === states.relax) {
-        if (curInnerLap === conf.maxInnerLap) {
-          state.update((state) => states.recovery);
-        }
-      }
+    if (temp.balance === 0) {   // веха в работе таймера
+      boundaryStateCalcs(temp); // что-то закончится, что-то начнётся 
     }
 
-    go(getDiff());
+    goIteration(getDiff());
   }
 
   function getTimeOfState(state) {
@@ -430,6 +361,39 @@
   function getDiff() {
     real = new Date().getTime() - startTime + pausedTime;
     return real - ideal;
+  }
+
+  function boundaryStateCalcs(temp: oneLoopValues) {
+    // смена состояния работа-отдых
+    c("balance = 0");
+    state.update((state) => temp.nextState);
+    counterTimer = 0;
+    isInitState = false;
+    audio.stop();
+
+    // проверка на завершение внешнего круга
+    // переход к долгому отдыху/восстановлению
+    if (temp.nextState === states.work) {
+      if (curInnerLap === conf.maxInnerLap) {
+        revertInnerLapToBeginning();
+        lap++;
+      } else {
+        curInnerLap++;
+      }
+    } else if (temp.nextState === states.relax) {
+      if (curInnerLap === conf.maxInnerLap) {
+        state.update((state) => states.recovery);
+      }
+    }
+  }
+
+  function revertInnerLapToBeginning() {
+    // для визуальной плавности возвращения индикатора малых кругов
+    // в исходное состояние переключаем постепенно
+    curInnerLap = 2;
+    setTimeout(() => {
+      curInnerLap = 1;
+    }, 500);
   }
 
   function calcTempData() {
@@ -473,14 +437,17 @@
   // определяем промежуток таймера, когда воспроизводим звук щелчка
   function maybeSound(temp: oneLoopValues) {
     if (
-      (temp.balance <= 6 && temp.stateTime > 10) ||
-      (temp.balance <= 3 && temp.stateTime > 5 && temp.stateTime <= 10)
+      !(temp.balance <= 6 && temp.stateTime > 10) 
+      &&
+      !(temp.balance <= 3 && temp.stateTime > 5 && temp.stateTime <= 10)
     ) {
-      if (temp.balance % 1 < 0.5) {
-        audio.replay();
-      } else {
-        audio.stop();
-      }
+      return;
+    }
+
+    if (temp.balance % 1 < 0.5) {
+      audio.replay();
+    } else {
+      audio.stop();
     }
   }
 
@@ -503,7 +470,7 @@
     sumTime = 0;
     audio.stop();
     clearInterval(engineStepTimeoutId);
-    ctx.strokeStyle = colors.stop;
+    ctx.strokeStyle = conf.colors.stop;
     circle.recalcValues(counterTimer, workTime);
     circle.draw();
     state.update((state) => states.end);
@@ -517,6 +484,29 @@
     localStorage.setItem("runAttempts", $runAttempts + "");
   }
 
+  function turnPause() {
+    if (paused) {
+      pauseStartTime = new Date().getTime();
+    } else {
+      currentState = pauseTempState;
+      pauseTempState = "";
+      pauseStopTime = new Date().getTime();
+      pausedTime = pausedTime + pauseStartTime - pauseStopTime;
+      nextState();
+    }
+  }
+
+  // по нажатию кнопки пользователем
+  function setPauseState() {
+    paused = !paused;
+    if (paused) {
+      pauseTempState = currentState;
+      currentState = states.pause;
+    } else {
+      turnPause();
+    }
+  }
+
   function scrollTo(id: string) {
     if (mobile) {
       setTimeout(() => {
@@ -524,24 +514,6 @@
       }, 500);
     }
   }
-
-  // function circle(timeValue: number) {
-  //   ctx.beginPath();
-  //   ctx.clearRect(0, 0, circleWidth, circleHeight);
-  //   let rad = (counterTimer * (180 / timeValue) * (Math.PI * 2)) / 180;
-  //   let radius = Math.round(circleHeight / 2) - lineWidth - 0.5;
-
-  //   ctx.lineWidth = lineWidth;
-  //   ctx.arc(
-  //     circleHeight / 2,
-  //     circleHeight / 2,
-  //     radius,
-  //     -Math.PI / 2,
-  //     rad - Math.PI / 2,
-  //     false
-  //   );
-  //   ctx.stroke();
-  // }
 
   function c(mes) {
     console.log(mes);
