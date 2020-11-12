@@ -3,23 +3,19 @@
   import { stateList } from "./stores/stores";
   import { mute } from "./stores/stores";
   import { runAttempts } from "./stores/stores";
+  import { settings } from "./stores/stores";
   import { conf } from "./config/config.js";
 
   import * as Format from "./core/format";
   import { Sound } from "./core/Sound";
   import { Circle } from "./core/Circle";
 
-  import Textfield from "@smui/textfield";
   import Button, { Label } from "@smui/button";
 
   import { tweened } from "svelte/motion";
   import { cubicOut } from "svelte/easing";
-  import { spring } from "svelte/motion";
   import { fade } from "svelte/transition";
   import { slide } from "svelte/transition";
-  import { quintOut } from "svelte/easing";
-  import { crossfade } from "svelte/transition";
-  import { flip } from "svelte/animate";
   import { onMount } from "svelte";
   // import { engine } from "./core/engine.js";
 
@@ -27,9 +23,9 @@
   let circleHeight = conf.circleHeight;
   let lineWidth = conf.lineWidth;
 
-  let workTime = 30;
-  let relaxTime = 30;
-  let laps = 3;
+  // let workTime = $settings.workTime;
+  // let relaxTime = 30;
+  // let laps = 3;
 
   let curInnerLap = 1;
   let curOuterLap = 0;
@@ -42,13 +38,9 @@
   let audio: Sound;
   let circle: Circle;
 
-  // let startIntervalId;
   let preWorktIntervalId;
-  // let timerIntervalId;
-
   let engineStepTimeoutId;
   let isInitState;
-
   let currentState;
   let states;
 
@@ -58,10 +50,9 @@
 
   let timerStep;
   let sumTime = 0;
-
   let startTime;
-  let ideal = 0;
-  let real = 0;
+  let idealExecutingTime = 0;
+  let realExecutingTime = 0;
   let diff = 0;
   let counter = 0;
   let firstStart = true;
@@ -73,20 +64,6 @@
   let pauseStartTime = 0;
   let pauseStopTime = 0;
   let pauseTempState;
-
-  // const resolutions = {
-  //   very_small: 290,
-  //   small: 479,
-  //   middle: 640,
-  //   min_desktop: 980,
-  // };
-
-  // const colors = {
-  //   work: "#ff7c20",
-  //   relax: "#3b99ff",
-  //   recovery: "#92ccff",
-  //   stop: "#00b60a",
-  // };
 
   const unsubscribe = state.subscribe((value) => {
     currentState = value;
@@ -118,18 +95,12 @@
     },
   };
 
-  type oneLoopValues = {
-      balance: number,
-      stateTime: number,
-      nextState: string,
-    };
-
   // время кругов
-  $: innerLapTime = workTime + relaxTime;
-  $: outerLapTime = innerLapTime * (conf.maxInnerLap - 1) + workTime;
+  $: innerLapTime = $settings.workTime + $settings.relaxTime;
+  $: outerLapTime = innerLapTime * (conf.maxInnerLap - 1) + $settings.workTime;
   $: lapTime = outerLapTime + conf.recoveryTime;
 
-  $: allTime = outerLapTime * laps + (laps - 1) * conf.recoveryTime;
+  $: allTime = outerLapTime * $settings.laps + ($settings.laps - 1) * conf.recoveryTime;
 
   // форматированное время
   $: hours = Math.round(allTime / 60 / 60);
@@ -240,7 +211,7 @@
 
     sumTime += timerStep / 1000;
     counter++;
-    ideal = counter * timerStep;
+    idealExecutingTime = counter * timerStep;
 
     engine[currentState]();
   }
@@ -283,13 +254,13 @@
     }
 
     counterTimer = counterTimer + timerStep / 1000;
-    timer = workTime - counterTimer;
+    timer = $settings.workTime - counterTimer;
     nextState();
   }
 
   function relax() {
     if (!isInitState) {
-      counterTimer = relaxTime;
+      counterTimer = $settings.relaxTime;
       ctx.strokeStyle = conf.colors.relax;
       isInitState = true;
     }
@@ -322,20 +293,12 @@
       return;
     }
 
-
-    let temp: oneLoopValues = {      
-      balance: 0,
-      stateTime: 0,
-      nextState: "new"
-    };
-
-    temp = calcTempData();
+    let temp = calcTempData();
 
     circle.recalcValues(counterTimer, temp.stateTime);
     circle.draw();
 
     maybeSound(temp);
-
 
     if (temp.balance === 0) {   // веха в работе таймера
       boundaryStateCalcs(temp); // что-то закончится, что-то начнётся 
@@ -346,11 +309,11 @@
 
   function getTimeOfState(state) {
     if (state === states.work) {
-      return workTime;
+      return $settings.workTime;
     }
 
     if (state === states.relax) {
-      return relaxTime;
+      return $settings.relaxTime;
     }
 
     if (state === states.recovery) {
@@ -359,8 +322,8 @@
   }
 
   function getDiff() {
-    real = new Date().getTime() - startTime + pausedTime;
-    return real - ideal;
+    realExecutingTime = new Date().getTime() - startTime + pausedTime;
+    return realExecutingTime - idealExecutingTime;
   }
 
   function boundaryStateCalcs(temp: oneLoopValues) {
@@ -407,7 +370,7 @@
 
     if (currentState === states.relax) {
       temp.balance = Math.abs(
-        ideal / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap)
+        idealExecutingTime / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap)
       );
       temp.nextState = states.work;
 
@@ -416,8 +379,8 @@
 
     if (currentState === states.work) {
       temp.balance = Math.abs(
-        ideal / 1000 -
-          (lapTime * (lap - 1) + innerLapTime * (curInnerLap - 1) + workTime)
+        idealExecutingTime / 1000 -
+          (lapTime * (lap - 1) + innerLapTime * (curInnerLap - 1) + $settings.workTime)
       );
       temp.nextState = states.relax;
 
@@ -425,7 +388,7 @@
     }
 
     if (currentState === states.recovery) {
-      temp.balance = Math.abs(ideal / 1000 - lapTime * lap);
+      temp.balance = Math.abs(idealExecutingTime / 1000 - lapTime * lap);
       temp.nextState = states.work;
 
       return temp;
@@ -452,7 +415,7 @@
   }
 
   function stopping() {
-    remaining = allTime - ideal / 1000;
+    remaining = allTime - idealExecutingTime / 1000;
 
     if (remaining == 0) {
       stop();
@@ -471,7 +434,7 @@
     audio.stop();
     clearInterval(engineStepTimeoutId);
     ctx.strokeStyle = conf.colors.stop;
-    circle.recalcValues(counterTimer, workTime);
+    circle.recalcValues(counterTimer, $settings.workTime);
     circle.draw();
     state.update((state) => states.end);
     preworked = false;
@@ -521,7 +484,7 @@
 
   let error_boolean = false;
   $: validateWorkTime = () => {
-    let str = workTime.toString();
+    let str = $settings.workTime.toString();
     let reg = /^[1-9]{1}(?!\d)$|^[1-6]{1}[0-9]{1}$/; // 1 цифра или 2 цифры (дял секунд от 1 до 60)
     c(reg.test(str));
     return reg.test(str);
@@ -853,14 +816,14 @@
           class:shadow--disabled={!validateWorkTime()}
           class:shadow--active={validateWorkTime()}
           transition:fade={{delay: 0, duration: 0, easing: cubicOut}}>
-          <label style="font-size: 4em;"> {workTime} </label>
+          <label style="font-size: 4em;"> {$settings.workTime} </label>
         </div>
         <span style="width: 100%; margin-top: 1.5em;">Время нагрузки</span>
         <input
           type="range"
           min="1"
           max="60"
-          bind:value={workTime}
+          bind:value={$settings.workTime}
           style="width: 100%; margin-top: 1.5em;" />
       </div>
 
@@ -872,21 +835,21 @@
           class:shadow--disabled={!validateWorkTime()}
           class:shadow--active={validateWorkTime()}
           transition:fade={{delay: 0, duration: 0, easing: cubicOut}}>
-          <label style="font-size: 4em; "> {relaxTime} </label>
+          <label style="font-size: 4em; "> {$settings.relaxTime} </label>
         </div>
         <span style="width: 100%; margin-top: 1.5em;">Время отдыха</span>
         <input
           type="range"
           min="1"
           max="60"
-          bind:value={relaxTime}
+          bind:value={$settings.relaxTime}
           style="width: 100%; margin-top: 1.5em;" />
       </div>
     </div>
 
-    <h3 class="status">Кругов: {laps}</h3>
+    <h3 class="status">Кругов: {$settings.laps}</h3>
 
-    <label> <input type="range" bind:value={laps} min="1" max="10" /> </label>
+    <label> <input type="range" bind:value={$settings.laps} min="1" max="10" /> </label>
 
     {#if error_boolean}
       <h1>OH NO! AN ERRROR!</h1>
