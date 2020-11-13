@@ -1,19 +1,19 @@
 <script lang="ts">
-    import Button from "@smui/button";
+    import IconButton, { Icon } from "@smui/icon-button";
     import { onMount } from "svelte";
-    import { defaultSettings, savedSettings, settings } from "./stores/stores";
+    import { savedSettings, settings, makeDefaultSettings} from "./stores/stores";
 
     let settingsIsSaved = false;
     let savedConf;
-    // let appConf;
-
+    
+    const defaultSettings: selectableParametersConfiguration = {
+    workTime:   30,
+    relaxTime:  30,
+    laps:       3
+}
     const unsubscribeSavedSettings = savedSettings.subscribe((value) => {
         savedConf = value;
     });
-
-    // const unsubscribeCurrentSettings = settings.subscribe((value) => {
-    //     appConf = value;
-    // });
 
     onMount(() => {
         initSettings();
@@ -35,15 +35,16 @@
         return localStorage.getItem("savedSettings");
     }
 
-    function validation(settings: string): selectableParametersConfiguration | null {
+    function validation(
+        settings: string
+    ): selectableParametersConfiguration | null {
         if (typeof settings !== "string") {
             return null;
         }
 
-        let object = JSON.parse(settings);
         let newSettings: selectableParametersConfiguration;
-
         try {
+            let object = JSON.parse(settings);
             newSettings = {
                 workTime: object.workTime,
                 relaxTime: object.relaxTime,
@@ -57,19 +58,19 @@
         return newSettings;
     }
 
-    function saveSettingsConfig() {
-        console.log("config was saved");
-        let obj = { 
+    function saveSettingsConfig(): void {
+        let obj = {
             workTime: $settings.workTime,
             relaxTime: $settings.relaxTime,
             laps: $settings.laps,
-         };
+        };
 
         localStorage.setItem("savedSettings", JSON.stringify(obj));
         settingsIsSaved = true;
+        console.log("config was saved");
     }
 
-    function loadSettingsConfig() {
+    function loadSettingsConfig(): void {
         let str = getSavedSettings();
         let loaded = validation(str);
         if (!loaded) {
@@ -80,27 +81,39 @@
         console.log("config was loaded");
     }
 
-    function setDefaultSettingsConfig() {
-        $settings = defaultSettings;
+    function setDefaultSettingsConfig(): void {
+        $settings = makeDefaultSettings();
         console.log("default was setted");
     }
+
 </script>
 
 <style>
     .settings {
-        font-size: 0.8em;
+        font-size: 2em;
     }
 </style>
 
 <div class="settings">
-    <span>Текущие настройки: </span>
-    <Button on:click={saveSettingsConfig} class="settings">Запомнить</Button>
+    <IconButton
+        class="material-icons"
+        on:click={saveSettingsConfig}
+        ripple={false}>
+        save
+    </IconButton>
 
-    {#if settingsIsSaved}
-        <Button on:click={loadSettingsConfig} class="settings">
-            Загрузить сохранённые
-        </Button>
-    {/if}
+    <IconButton
+        class="material-icons"
+        on:click={loadSettingsConfig}
+        disabled={!settingsIsSaved}
+        ripple={false}>
+        unarchive
+    </IconButton>
 
-    <Button on:click={setDefaultSettingsConfig}>Сбросить</Button>
+    <IconButton
+        class="material-icons"
+        on:click={setDefaultSettingsConfig}
+        ripple={false}>
+        autorenew
+    </IconButton>
 </div>

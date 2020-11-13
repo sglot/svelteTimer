@@ -10,10 +10,13 @@ var list = {
     end:        'Конец'
 };
 
-export let defaultSettings: selectableParametersConfiguration = {
-    workTime:   30,
-    relaxTime:  30,
-    laps:       3
+
+export function makeDefaultSettings(): selectableParametersConfiguration {
+    return {
+        workTime:   30,
+        relaxTime:  30,
+        laps:       3
+    }
 }
 
 export 
@@ -22,5 +25,5 @@ export
         stateList       = writable(list),
         runAttempts     = writable(0),
         mute            = writable(false),
-        savedSettings   = writable(defaultSettings),
-        settings        = writable(defaultSettings);
+        savedSettings   = writable(makeDefaultSettings()),
+        settings        = writable(makeDefaultSettings());

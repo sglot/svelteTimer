@@ -1,7 +1,7 @@
 <script lang="ts">
     import Timer from './Timer.svelte';
 	import Info from './Info.svelte';
-	import Panel from './Panel.svelte';
+	import Settings from './Settings.svelte';
 </script>
 
 <main>
@@ -9,7 +9,7 @@
 
 	<p>Svelte Timer. Powered by "Chto, opyat?"</p>
 
-	<Panel/>
+	<Settings/>
 
     <Timer/>
 </main>
