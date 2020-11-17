@@ -1,3 +1,5 @@
+type state = 'settings' | 'countdown' | 'work' | 'relax' | 'recovery' | 'pause' | 'end';
+
 type selectableParametersConfiguration = {
     workTime:   number,
     relaxTime:  number,
@@ -5,7 +7,14 @@ type selectableParametersConfiguration = {
 }
 
 type oneLoopValues = {
-    balance: number,
-    stateTime: number,
-    nextState: string,
+    balance:    number,
+    stateTime:  number,
+    nextState:  string,
   };
+
+type engine = {
+    "Нагрузка":             () => void,
+    "Отдых":                () => void,
+    "Восстановление сил":   () => void,
+    "Пауза":                () => void,
+}

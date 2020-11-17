@@ -29,7 +29,7 @@
 </style>
 
 <div class="info-header">
-    <span>v. 0.38 | </span>
+    <span>v. 1.0.1 | </span>
     <span>Запуск
         <span style="text-decoration:underline steelblue" on:click={changeMute}>
             {$runAttempts}

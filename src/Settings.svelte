@@ -1,22 +1,16 @@
 <script lang="ts">
+    import { state, stateList } from "./stores/stores";
     import IconButton, { Icon } from "@smui/icon-button";
+    import Snackbar, {Actions, Label} from '@smui/snackbar';
     import { onMount } from "svelte";
-    import { savedSettings, settings, makeDefaultSettings} from "./stores/stores";
-
-    let settingsIsSaved = false;
-    let savedConf;
+    import { settings, makeDefaultSettings } from "./stores/stores";
     
-    const defaultSettings: selectableParametersConfiguration = {
-    workTime:   30,
-    relaxTime:  30,
-    laps:       3
-}
-    const unsubscribeSavedSettings = savedSettings.subscribe((value) => {
-        savedConf = value;
-    });
+    let settingsIsSaved = false;
+    let savedSettingsSnackbar;
 
     onMount(() => {
         initSettings();
+        console.log($state);
     });
 
     function initSettings(): void {
@@ -35,9 +29,7 @@
         return localStorage.getItem("savedSettings");
     }
 
-    function validation(
-        settings: string
-    ): selectableParametersConfiguration | null {
+    function validation(settings: string): selectableParametersConfiguration | null {
         if (typeof settings !== "string") {
             return null;
         }
@@ -59,14 +51,15 @@
     }
 
     function saveSettingsConfig(): void {
-        let obj = {
+        let nativeObj = {
             workTime: $settings.workTime,
             relaxTime: $settings.relaxTime,
             laps: $settings.laps,
         };
 
-        localStorage.setItem("savedSettings", JSON.stringify(obj));
+        localStorage.setItem("savedSettings", JSON.stringify(nativeObj));
         settingsIsSaved = true;
+        savedSettingsSnackbar.open();
         console.log("config was saved");
     }
 
@@ -74,7 +67,7 @@
         let str = getSavedSettings();
         let loaded = validation(str);
         if (!loaded) {
-            loaded = defaultSettings;
+            loaded = makeDefaultSettings();
         }
 
         $settings = loaded;
@@ -94,26 +87,32 @@
     }
 </style>
 
-<div class="settings">
-    <IconButton
-        class="material-icons"
-        on:click={saveSettingsConfig}
-        ripple={false}>
-        save
-    </IconButton>
+{#if $state === $stateList.settings || $state === $stateList.end}
+    <div class="settings">
+        <IconButton
+            class="material-icons"
+            on:click={saveSettingsConfig}
+            ripple={false}>
+            save
+        </IconButton>
 
-    <IconButton
-        class="material-icons"
-        on:click={loadSettingsConfig}
-        disabled={!settingsIsSaved}
-        ripple={false}>
-        unarchive
-    </IconButton>
+        <IconButton
+            class="material-icons"
+            on:click={loadSettingsConfig}
+            disabled={!settingsIsSaved}
+            ripple={false}>
+            unarchive
+        </IconButton>
 
-    <IconButton
-        class="material-icons"
-        on:click={setDefaultSettingsConfig}
-        ripple={false}>
-        autorenew
-    </IconButton>
-</div>
+        <IconButton
+            class="material-icons"
+            on:click={setDefaultSettingsConfig}
+            ripple={false}>
+            refresh
+        </IconButton>
+    </div>
+
+    <Snackbar leading  bind:this={savedSettingsSnackbar}>
+        <Label>Настройки успешно сохранены</Label>
+    </Snackbar>
+{/if}

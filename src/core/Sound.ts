@@ -4,10 +4,6 @@ export class Sound {
     alreadyPlay:    boolean;
     
     constructor(mute: boolean, src: string) {
-        console.log(mute);
-        console.log("================================================================================");
-        console.log((typeof mute === "boolean"));
-
         this.mute           = mute;
         this.alreadyPlay    = false;
         this.sound          = new Audio();

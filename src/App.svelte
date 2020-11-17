@@ -7,7 +7,7 @@
 <main>
 	<Info/>
 
-	<p>Svelte Timer. Powered by "Chto, opyat?"</p>
+	<p>Svelte Timer. Inspired by "Chto, opyat?"</p>
 
 	<Settings/>
 

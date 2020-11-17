@@ -17,15 +17,10 @@
   import { fade } from "svelte/transition";
   import { slide } from "svelte/transition";
   import { onMount } from "svelte";
-  // import { engine } from "./core/engine.js";
 
   let circleWidth = conf.circleWidth;
   let circleHeight = conf.circleHeight;
   let lineWidth = conf.lineWidth;
-
-  // let workTime = $settings.workTime;
-  // let relaxTime = 30;
-  // let laps = 3;
 
   let curInnerLap = 1;
   let curOuterLap = 0;
@@ -80,17 +75,17 @@
 
   const progress = tweened(0, progressOptions);
 
-  let engine = {
-    Нагрузка: () => {
+  let engine: engine = {
+    "Нагрузка": () => {
       work();
     },
-    Отдых: () => {
+    "Отдых": () => {
       relax();
     },
     "Восстановление сил": () => {
       recovery();
     },
-    Пауза: () => {
+    "Пауза": () => {
       turnPause();
     },
   };
@@ -103,14 +98,14 @@
   $: allTime = outerLapTime * $settings.laps + ($settings.laps - 1) * conf.recoveryTime;
 
   // форматированное время
-  $: hours = Math.round(allTime / 60 / 60);
-  $: minutes = Math.round(allTime / 60) - hours * 60;
-  $: seconds = Math.round(allTime % 60);
+  $: hours = Math.trunc(allTime / 60 / 60);
+  $: minutes = Math.trunc(allTime / 60);
+  $: seconds = Math.trunc(allTime % 60);
 
-  $: rHours = Math.round(remaining / 60 / 60);
-  $: rMinutes = Math.round(remaining / 60) - rHours * 60;
-  $: rSeconds = Math.round(remaining % 60);
-
+  $: rHours = Math.trunc(remaining / 60 / 60);
+  $: rMinutes = Math.trunc(remaining / 60) ;
+  $: rSeconds = Math.trunc(remaining % 60);
+  
   $: timerFormatted = () => {
     return timer < 61
       ? Math.round(timer)
@@ -149,7 +144,7 @@
   function start() {
     started = true;
     init();
-    currentState = states.countdown;
+    state.update(s => states.countdown);
     scrollTo("clock-common");
     goIteration(0);
   }
@@ -329,7 +324,7 @@
   function boundaryStateCalcs(temp: oneLoopValues) {
     // смена состояния работа-отдых
     c("balance = 0");
-    state.update((state) => temp.nextState);
+    state.update(s => temp.nextState);
     counterTimer = 0;
     isInitState = false;
     audio.stop();
@@ -436,7 +431,7 @@
     ctx.strokeStyle = conf.colors.stop;
     circle.recalcValues(counterTimer, $settings.workTime);
     circle.draw();
-    state.update((state) => states.end);
+    state.update(s => states.end);
     preworked = false;
     started = false;
 
@@ -859,7 +854,9 @@
 
 <div id="btn_start" />
 <Button on:click={start} variant="unelevated" disabled={started}>
-  <Label>Старт</Label>
+  <span class="material-icons">
+    play_arrow
+  </span>
 </Button>
 
 <Button
@@ -867,7 +864,9 @@
   variant="outlined"
   disabled={!preworked || currentState === states.recovery}
   color="secondary">
-  <Label>Пауза</Label>
+  <span class="material-icons">
+    pause
+  </span>
 </Button>
 
 <div class="tablo-side">

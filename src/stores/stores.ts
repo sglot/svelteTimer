@@ -1,6 +1,6 @@
 import {writable} from 'svelte/store';
 
-var list = {
+let list: {[K in state]: string} = {
     settings:   'Параметры',
     countdown:  'Обратный отсчёт',
     work:       'Нагрузка',
@@ -21,7 +21,7 @@ export function makeDefaultSettings(): selectableParametersConfiguration {
 
 export 
     const 
-        state           = writable('settings'), 
+        state           = writable('Параметры'), 
         stateList       = writable(list),
         runAttempts     = writable(0),
         mute            = writable(false),
