@@ -1,22 +1,26 @@
-<div class="info-header">
-    <span>v. 0.38 | </span>
-    <span>Запуск
-        <span
-            style="text-decoration:underline steelblue"
-            on:click={changeMute}
-        >
-            {$runAttempts} |
-        </span>
-    </span>
-    <span>Звук
-        <span
-            style="text-decoration:underline double steelblue"
-            on:click={changeMute}
-        >
-                {$mute ? 'выкл' : 'вкл'}
-        </span>
-    </span>
-</div>
+<script lang="ts">
+    import { onMount } from "svelte";
+    import { mute } from "./stores/stores";
+    import { runAttempts } from "./stores/stores";
+
+    onMount(() => {
+        // инициализация количества попыток запуска на текущем устройстве
+        runAttempts.set(parseInt(localStorage.getItem("runAttempts")));
+        if (!isFinite($runAttempts) || $runAttempts === null) {
+            runAttempts.set(0);
+            localStorage.setItem("runAttempts", "0");
+        }
+
+        //инициализация звук вкл/выкл
+        mute.set(localStorage.getItem("mute") === "true" ? true : false);
+        localStorage.setItem("mute", $mute.toString());
+    });
+
+    function changeMute(): void {
+        mute.set(!$mute);
+        localStorage.setItem("mute", $mute.toString());
+    }
+</script>
 
 <style>
     .info-header {
@@ -24,27 +28,19 @@
     }
 </style>
 
-<script>
-	import { onMount } from 'svelte';
-    import { mute } from "./stores/stores.js";
-    import { runAttempts } from "./stores/stores.js";
-
-	onMount(() => {
-        // инициализация количества попыток запуска на текущем устройстве
-        runAttempts.set(localStorage.getItem('runAttempts'));
-        if (!isFinite($runAttempts) || $runAttempts === null) {
-            runAttempts.set(0);
-            localStorage.setItem('runAttempts', 0);
-        }
-
-        //инициализация звук вкл/выкл
-        mute.set(localStorage.getItem('mute') === 'true' ? true : false);
-        localStorage.setItem('mute', $mute);
-    });
-    
-    function changeMute() {
-        mute.set(!$mute);
-        localStorage.setItem('mute', mute);
-    }
-    
-</script>
+<div class="info-header">
+    <span>v. 1.0.1 | </span>
+    <span>Запуск
+        <span style="text-decoration:underline steelblue" on:click={changeMute}>
+            {$runAttempts}
+            |
+        </span>
+    </span>
+    <span>Звук
+        <span
+            style="text-decoration:underline double steelblue"
+            on:click={changeMute}>
+            {$mute ? 'выкл' : 'вкл'}
+        </span>
+    </span>
+</div>

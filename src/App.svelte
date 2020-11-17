@@ -1,22 +1,17 @@
-<script>
-    import Button from '@smui/button';
+<script lang="ts">
     import Timer from './Timer.svelte';
 	import Info from './Info.svelte';
-    let showTimer = true;
-
-    export let name;
-
+	import Settings from './Settings.svelte';
 </script>
 
 <main>
 	<Info/>
 
-	<p>Svelte Timer. Powered by "Chto, opyat?"</p>
-	<Button on:click={() => {showTimer = !showTimer;}}>{name} click</Button>
+	<p>Svelte Timer. Inspired by "Chto, opyat?"</p>
 
-    {#if showTimer}
-        <Timer/>
-    {/if}
+	<Settings/>
+
+    <Timer/>
 </main>
 
 <style>
@@ -25,13 +20,6 @@
 		padding: 1em;
 		/*max-width: 1240px;*/
 		margin: 0 auto;
-	}
-
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
 	}
 
 	@media (min-width: 640px) {
