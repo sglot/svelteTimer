@@ -9,6 +9,7 @@
   import * as Format from "./core/format";
   import { Sound } from "./core/Sound";
   import { Circle } from "./core/Circle";
+  import Chart from "./Chart.svelte"; 
 
   import Button, { Label } from "@smui/button";
 
@@ -60,6 +61,12 @@
   let pauseStopTime = 0;
   let pauseTempState;
 
+  let circleConfig = {
+    bgColor: 'black',
+    frontColor: 'white', 
+    bgLineWidth: conf.bgLineWidth,
+    frontLineWidth: conf.frontLineWidth
+  }
   const unsubscribe = state.subscribe((value) => {
     currentState = value;
   });
@@ -174,12 +181,13 @@
       return;
     }
 
-    canvas = document.getElementById("cv");
-    canvas.width = circleWidth;
-    canvas.height = circleHeight;
-    canvas.style.left = 0 + "px";
-    ctx = canvas.getContext("2d");
-    circle = new Circle(ctx, circleWidth, circleHeight, lineWidth);
+    // canvas = document.getElementById("cv");
+    // canvas.width = circleWidth;
+    // canvas.height = circleHeight;
+    // canvas.style.left = 0 + "px";
+    // ctx = canvas.getContext("2d");
+    circle = new Circle('cv', circleWidth, circleHeight, lineWidth);
+    circle.setConfig(circleConfig);
     firstStart = false;
   }
 
@@ -243,7 +251,8 @@
   function work() {
     if (!isInitState) {
       counterTimer = 0;
-      ctx.strokeStyle = conf.colors.work;
+      circleConfig.frontColor = conf.colors.work;
+      circle.setConfig(circleConfig);
       isInitState = true;
       curOuterLap++;
     }
@@ -256,7 +265,8 @@
   function relax() {
     if (!isInitState) {
       counterTimer = $settings.relaxTime;
-      ctx.strokeStyle = conf.colors.relax;
+      circleConfig.frontColor = conf.colors.relax;
+      circle.setConfig(circleConfig);
       isInitState = true;
     }
 
@@ -268,7 +278,8 @@
   function recovery() {
     if (!isInitState) {
       counterTimer = conf.recoveryTime + 0.8; // добавочное время, чтобы можно было увидеть иcходные 03:00
-      ctx.strokeStyle = conf.colors.recovery;
+      circleConfig.frontColor = conf.colors.recovery;
+      circle.setConfig(circleConfig);
       isInitState = true;
     } else {
       counterTimer = counterTimer - timerStep / 1000;
@@ -428,7 +439,8 @@
     sumTime = 0;
     audio.stop();
     clearInterval(engineStepTimeoutId);
-    ctx.strokeStyle = conf.colors.stop;
+    circleConfig.frontColor = conf.colors.stop;
+      circle.setConfig(circleConfig);
     circle.recalcValues(counterTimer, $settings.workTime);
     circle.draw();
     state.update(s => states.end);
@@ -811,7 +823,7 @@
           class:shadow--disabled={!validateWorkTime()}
           class:shadow--active={validateWorkTime()}
           transition:fade={{delay: 0, duration: 0, easing: cubicOut}}>
-          <label style="font-size: 4em;"> {$settings.workTime} </label>
+          <span style="font-size: 4em;"> {$settings.workTime} </span>
         </div>
         <span style="width: 100%; margin-top: 1.5em;">Время нагрузки</span>
         <input
@@ -830,7 +842,7 @@
           class:shadow--disabled={!validateWorkTime()}
           class:shadow--active={validateWorkTime()}
           transition:fade={{delay: 0, duration: 0, easing: cubicOut}}>
-          <label style="font-size: 4em; "> {$settings.relaxTime} </label>
+          <span style="font-size: 4em; "> {$settings.relaxTime} </span>
         </div>
         <span style="width: 100%; margin-top: 1.5em;">Время отдыха</span>
         <input
@@ -953,6 +965,8 @@
     <progress value={$progress} />
   </div>
 
+  <Chart/>
+  
   <!-- <audio id="audio">
     <source src="/sounds/sek.mp3" type="audio/mpeg">
     Тег audio не поддерживается вашим браузером.
