@@ -152,7 +152,7 @@
     started = true;
     init();
     state.update(s => states.countdown);
-    scrollTo("clock-common");
+    scrollTo("settings");
     goIteration(0);
   }
 
@@ -252,6 +252,7 @@
     if (!isInitState) {
       counterTimer = 0;
       circleConfig.frontColor = conf.colors.work;
+      circleConfig.frontLineWidth = lap;
       circle.setConfig(circleConfig);
       isInitState = true;
       curOuterLap++;

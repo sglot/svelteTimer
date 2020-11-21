@@ -27,8 +27,8 @@ export class Circle {
 
     draw() {
         this.ctx.clearRect(0, 0, this.width, this.height);
-        // this.drawLayer('rgba(250, 20, 50, 0.5)', this.config.bgLineWidth);
-        this.drawLayer( this.config.frontColor, this.config.frontLineWidth);
+        this.drawLayer(this.config.frontColor + `0.95)`, this.config.bgLineWidth);
+        this.drawLayer( this.config.frontColor + `0.3)`, this.config.frontLineWidth);
     }
 
     private drawLayer(color: string, lineWidth: number) {
