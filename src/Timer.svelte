@@ -4,12 +4,13 @@
   import { mute } from "./stores/stores";
   import { runAttempts } from "./stores/stores";
   import { settings } from "./stores/stores";
+  import { timeFromStart } from "./stores/stores";
   import { conf } from "./config/config.js";
 
   import * as Format from "./core/format";
   import { Sound } from "./core/Sound";
   import { Circle } from "./core/Circle";
-  import Chart from "./Chart.svelte"; 
+  import Graph from "./Graph.svelte"; 
 
   import Button, { Label } from "@smui/button";
 
@@ -67,6 +68,9 @@
     bgLineWidth: conf.bgLineWidth,
     frontLineWidth: conf.frontLineWidth
   }
+
+  const body = document.querySelector('body');
+
   const unsubscribe = state.subscribe((value) => {
     currentState = value;
   });
@@ -152,7 +156,7 @@
     started = true;
     init();
     state.update(s => states.countdown);
-    scrollTo("settings");
+    scrollTo("btn_start");
     goIteration(0);
   }
 
@@ -171,6 +175,9 @@
     preworked = false;
 
     audio = new Sound($mute, "/sounds/tick-tick.mp3");
+    mute.subscribe(newValue => {
+        audio.setMute(newValue);
+    });
 
     pausedTime = 0;
     pauseStartTime = 0;
@@ -181,11 +188,6 @@
       return;
     }
 
-    // canvas = document.getElementById("cv");
-    // canvas.width = circleWidth;
-    // canvas.height = circleHeight;
-    // canvas.style.left = 0 + "px";
-    // ctx = canvas.getContext("2d");
     circle = new Circle('cv', circleWidth, circleHeight, lineWidth);
     circle.setConfig(circleConfig);
     firstStart = false;
@@ -291,6 +293,8 @@
   }
 
   function nextState() {
+    displayActivation(15);
+
     if (paused) {
       goIteration(getDiff());
       return;
@@ -312,6 +316,12 @@
     }
 
     goIteration(getDiff());
+  }
+
+  function displayActivation(seconds: number) {
+    if (mobile && (remaining % seconds === 0)) {
+      body.click();
+    }
   }
 
   function getTimeOfState(state) {
@@ -407,9 +417,15 @@
   // определяем промежуток таймера, когда воспроизводим звук щелчка
   function maybeSound(temp: oneLoopValues) {
     if (
-      !(temp.balance <= 6 && temp.stateTime > 10) 
-      &&
-      !(temp.balance <= 3 && temp.stateTime > 5 && temp.stateTime <= 10)
+      !(
+        (temp.balance <= 20 && temp.stateTime > 60) 
+        ||
+        (temp.balance <= 11 && temp.stateTime >= 30) 
+        ||
+        (temp.balance <= 6 && temp.stateTime > 10) 
+        ||
+        (temp.balance <= 3 && temp.stateTime > 5 && temp.stateTime <= 10)
+      )
     ) {
       return;
     }
@@ -423,7 +439,8 @@
 
   function stopping() {
     remaining = allTime - idealExecutingTime / 1000;
-
+    $timeFromStart = (allTime - remaining) / allTime;
+    
     if (remaining == 0) {
       stop();
       progress.set(1, progressOptions);
@@ -582,7 +599,7 @@
 
   @media screen and (min-width: 291px) and (max-width: 479px) {
     .time-block {
-      font-size: 1.5em !important;
+      font-size: 2em !important;
       width: 150px !important;
       height: 150px !important;
       margin: 25px auto;
@@ -714,7 +731,7 @@
   }
 
   .text--disabled {
-    opacity: 0.5;
+    opacity: 0.2;
     transition: opacity 0.5s cubic-bezier(0, 0, 1, 1);
   }
 
@@ -966,7 +983,7 @@
     <progress value={$progress} />
   </div>
 
-  <Chart/>
+  <Graph/>
   
   <!-- <audio id="audio">
     <source src="/sounds/sek.mp3" type="audio/mpeg">
