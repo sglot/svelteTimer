@@ -446,9 +446,10 @@
     if (remaining == 0) {
       stop();
       progress.set(1, progressOptions);
+      $timeFromStart = 0;
       return true;
     } else {
-      progress.set(((allTime - remaining) * 100) / allTime / 100, progressOptions);
+      progress.set(((allTime - remaining)) / allTime, progressOptions);
       return false;
     }
   }

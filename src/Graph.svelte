@@ -12,7 +12,7 @@
     let config = null;
 
     onMount(() => {
-        initChart();
+        initGraph();
         isInitialized = true;
     });
     
@@ -27,12 +27,12 @@
         console.log('state==' + $state);
         if ($state == $stateList.work) {
             // console.log('wooooooooooork!!!');
-            graph.drawStep(newValue,    conf.colors.work + (0.7 + newValue / 3.33));
+            graph.drawStep(newValue,    conf.colors.work + 1+(0.5 + newValue / 2));
             return;
         }
 
         if ($state == $stateList.relax) {
-            graph.drawStep(newValue,    conf.colors.relax + (1 - newValue / 3.33));
+            graph.drawStep(newValue,    conf.colors.relax + 1+(1 - newValue / 2));
             return;
         }
 
@@ -41,32 +41,27 @@
             return;
         }
 
+        if ($state === $stateList.end) {
+            console.log('is stop + drop configured graph');
+            graph.drawToEnd(conf.colors.work + (1));
+            graph.dropConfigured();
+            return;
+        }
+
     });
 
-    function initChart() {
+    function initGraph() {
         graph = new Graph('graph');  
     };
 </script>
 
 <style>
-    .graph {
-        /* width: 1300px;
-        height: 200px; */
-        
-    }
     .time-indicator {
-        background-color: rgba(241, 241, 247, 0.678);
-        /* border-radius: 50; */
         width: 100%;
         height: 10px;
     }
 </style>
 
-<div class="chart--content">
-    <div
-        class="graph"
-        
-    >
-        <canvas id="graph" class="time-indicator"/>
-    </div>
+<div>
+    <canvas id="graph" class="time-indicator"/>
 </div>

@@ -8,6 +8,8 @@ export class Graph {
     private TWO_PI: number = 2 * Math.PI;
     private lastX: number = 1;
     private newX: number = 1;
+    private w: number;
+    private h: number;
 
 
     constructor(id: string) {
@@ -18,29 +20,33 @@ export class Graph {
         this.canvas.width = this.canvas.offsetWidth;
         this.canvas.style.left = 0 + "px";
 
+        this.init();
+    }
+
+    init() {
+        this.w = 1;
+        this.h = this.canvas.height - 2;
+
         this.ctx.fillStyle = '#eeeeee';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.strokeStyle = '#000';
         this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    drawStep(h: number, color: string) {
-        let colX1 = this.lastX;
-        let colY1 = 1;
-        let colY2 = this.canvas.height - 2;
+    drawStep(h1: number, color: string) {
 
-        let pacerX = colX1;
+        let pacerX = this.lastX;
         let pacerY = this.canvas.height / 2;
 
         if (this.step < 1) {
             if (this.newX - this.lastX < 1) {
-                this.drawColumn(colX1, colY1, 1, colY2, color);
+                this.drawColumn(this.lastX, this.w, 1, this.h, color);
                 this.newX += this.step;
                 return;
             }
 
             this.drawPacer(pacerX, pacerY, color);
-            this.drawColumn(colX1, colY1, 1, colY2, color);
+            this.drawColumn(this.lastX, this.w, 1, this.h, color);
             this.newX += this.step;
             this.lastX = this.newX;
             return;
@@ -48,13 +54,13 @@ export class Graph {
 
         if (this.idealX < this.lastX) {
             this.drawPacer(pacerX, pacerY, color);
-            this.drawColumn(colX1, colY1, this.step, colY2, color);
+            this.drawColumn(this.lastX, this.w, this.step, this.h, color);
             this.idealX += this.step;
             return;
         }
 
         this.drawPacer(pacerX, pacerY, color);
-        this.drawColumn(colX1, colY1, this.step, colY2, color);
+        this.drawColumn(this.lastX, this.w, this.step, this.h, color);
 
         this.lastX += this.step;
         this.idealX += this.step;
@@ -72,13 +78,15 @@ export class Graph {
         let rad = this.canvas.height / 2 - 2; // середина минус границы
         this.ctx.fillStyle = this.ctx.strokeStyle = color;
         this.ctx.beginPath();
-        this.ctx.arc(x, y, rad, -Math.PI / 2, Math.PI / 2);
+        this.ctx.arc(x, y, rad, -Math.PI / 2, Math.PI);
         this.ctx.closePath();
         this.ctx.fill();
         this.ctx.stroke();
     }
 
     setParams(allTime: number, timerStep: number) {
+        this.init();
+
         this.step = (this.canvas.width / allTime) * (timerStep / 1000);
         this.allTime = allTime;
         console.log('step=' + this.step);
@@ -89,4 +97,15 @@ export class Graph {
     configured() {
         return this.isConfigured;
     }
+
+    drawToEnd(color: string) {
+        this.drawColumn(this.lastX - 1, this.w, this.canvas.width - this.lastX, this.h, color);
+    }
+
+    dropConfigured() {
+        this.lastX = 1;
+        this.newX = 1;
+        this.isConfigured = false;
+    }
+
 }
