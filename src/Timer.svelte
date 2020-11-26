@@ -45,7 +45,7 @@
   let ctx;
   let mobile = false;
 
-  let timerStep;
+  let timerStep: number;
   let sumTime = 0;
   let startTime;
   let idealExecutingTime = 0;
@@ -115,14 +115,14 @@
 
   $: rHours = Math.trunc(remaining / 60 / 60);
   $: rMinutes = Math.trunc(remaining / 60) ;
-  $: rSeconds = Math.trunc(remaining % 60);
+  $: rSeconds = Math.round(remaining % 60);
   
   $: timerFormatted = () => {
-    return timer < 61
+    return timer < 60
       ? Math.round(timer)
-      : Format.getMinutesInTwoDigitFormat(Math.trunc(timer / 60)) +
-          ":" +
-          Format.getSecondsInTwoDigitFormat(Math.trunc(timer % 60));
+      : Format.getMinutesInTwoDigitFormat(Math.trunc(timer / 60)) 
+        + ":" 
+        + Format.getSecondsInTwoDigitFormat(Math.trunc(timer % 60));
   };
 
   onMount(async () => {
@@ -162,9 +162,9 @@
 
   function init() {
     console.log("init");
-    preWorkTime = 3;
+    preWorkTime = conf.preWorkTime;
     remaining = allTime;
-    timerStep = 50;
+    timerStep = conf.timerStep;
     sumTime = 0;
     counter = 0;
     curInnerLap = 1;
@@ -238,6 +238,7 @@
         clearInterval(preWorktIntervalId);
         // state.update(state => states.work);
         currentState = states.work;
+        $state = states.work;
         isInitState = false;
         startTime = new Date().getTime();
         console.clear();
@@ -305,6 +306,7 @@
     }
 
     let temp = calcTempData();
+    $timeFromStart = ((temp.stateTime - temp.balance) * 100) / temp.stateTime / 100;
 
     circle.recalcValues(counterTimer, temp.stateTime);
     circle.draw();
@@ -390,7 +392,7 @@
         idealExecutingTime / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap)
       );
       temp.nextState = states.work;
-
+      
       return temp;
     }
 
@@ -439,7 +441,7 @@
 
   function stopping() {
     remaining = allTime - idealExecutingTime / 1000;
-    $timeFromStart = (allTime - remaining) / allTime;
+    
     
     if (remaining == 0) {
       stop();
@@ -983,7 +985,7 @@
     <progress value={$progress} />
   </div>
 
-  <Graph/>
+  <Graph allTime={allTime}/>
   
   <!-- <audio id="audio">
     <source src="/sounds/sek.mp3" type="audio/mpeg">

@@ -5,7 +5,8 @@ const conf = {
   circleHeight    : 300,  //px
   frontLineWidth  : 4,    //px
   bgLineWidth     : 18,   //px
-  // lineWidth     : 8,    //px
+  timerStep       : 50,
+  preWorkTime     : 3,
 
   resolutions: {
     very_small    : 290,
