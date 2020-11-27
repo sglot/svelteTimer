@@ -29,9 +29,9 @@
 </style>
 
 <div class="info-header">
-    <span>v. 1.0.1 | </span>
+    <span>v. 1.0.2 | </span>
     <span>Запуск
-        <span style="text-decoration:underline steelblue" on:click={changeMute}>
+        <span style="text-decoration:underline steelblue">
             {$runAttempts}
             |
         </span>

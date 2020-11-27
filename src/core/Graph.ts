@@ -29,11 +29,15 @@ export class Graph {
 
         this.ctx.fillStyle = '#eeeeee';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.strokeStyle = '#000';
+        this.drawBorder('#222');
+    }
+
+    drawBorder(color: string) {
+        this.ctx.strokeStyle = color;
         this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    drawStep(h1: number, color: string) {
+    drawStep(color: string, divide: boolean) {
 
         let pacerX = this.lastX;
         let pacerY = this.canvas.height / 2;
@@ -45,7 +49,7 @@ export class Graph {
                 return;
             }
 
-            this.drawPacer(pacerX, pacerY, color);
+            this.drawPacer(pacerX, pacerY, color, divide);
             this.drawColumn(this.lastX, this.w, 1, this.h, color);
             this.newX += this.step;
             this.lastX = this.newX;
@@ -53,13 +57,13 @@ export class Graph {
         }
 
         if (this.idealX < this.lastX) {
-            this.drawPacer(pacerX, pacerY, color);
+            this.drawPacer(pacerX, pacerY, color, divide);
             this.drawColumn(this.lastX, this.w, this.step, this.h, color);
             this.idealX += this.step;
             return;
         }
 
-        this.drawPacer(pacerX, pacerY, color);
+        this.drawPacer(pacerX, pacerY, color, divide);
         this.drawColumn(this.lastX, this.w, this.step, this.h, color);
 
         this.lastX += this.step;
@@ -74,14 +78,19 @@ export class Graph {
         this.ctx.closePath();
     }
 
-    private drawPacer(x: number, y: number, color: string) {
+    private drawPacer(x: number, y: number, color: string, divide: boolean) {
         let rad = this.canvas.height / 2 - 2; // середина минус границы
         this.ctx.fillStyle = this.ctx.strokeStyle = color;
         this.ctx.beginPath();
-        this.ctx.arc(x, y, rad, -Math.PI / 2, Math.PI);
+        this.ctx.arc(x, y, rad, -Math.PI / 2, 2*Math.PI);
         this.ctx.closePath();
         this.ctx.fill();
-        this.ctx.stroke();
+
+        if (divide) {
+            this.ctx.strokeStyle = 'rgba(100, 100, 100, 0.5)';
+            this.ctx.stroke();
+        }
+
     }
 
     setParams(allTime: number, timerStep: number) {
@@ -100,6 +109,7 @@ export class Graph {
 
     drawToEnd(color: string) {
         this.drawColumn(this.lastX - 1, this.w, this.canvas.width - this.lastX, this.h, color);
+        this.drawBorder('#000');
     }
 
     dropConfigured() {

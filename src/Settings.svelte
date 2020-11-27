@@ -15,14 +15,11 @@
 
     function initSettings(): void {
         let settings = getSavedSettings();
-        if (!validation(settings)) {
-            setDefaultSettingsConfig();
-            console.log("error validation");
-            return;
+        if (validation(settings)) {
+            console.log("validation is successfuly");
+            settingsIsSaved = true;
         }
-
-        console.log("validation is successfuly");
-        settingsIsSaved = true;
+        loadSettingsConfig();       
     }
 
     function getSavedSettings(): string {
