@@ -25,5 +25,6 @@ export
         stateList       = writable(list),
         runAttempts     = writable(0),
         mute            = writable(false),
+        timeFromStart   = writable(0),
         savedSettings   = writable(makeDefaultSettings()),
         settings        = writable(makeDefaultSettings());

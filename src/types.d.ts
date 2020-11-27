@@ -18,3 +18,10 @@ type engine = {
     "Восстановление сил":   () => void,
     "Пауза":                () => void,
 }
+
+type circleConfig = {
+    bgColor: string,
+    frontColor: string, 
+    bgLineWidth: number,
+    frontLineWidth: number
+  }

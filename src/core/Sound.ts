@@ -26,4 +26,8 @@ export class Sound {
         console.log("alreadyPlay---" + this.alreadyPlay);
     }
 
+    setMute(mute: boolean): void {
+        this.mute = mute;
+    }
+
   }

@@ -4,11 +4,13 @@
   import { mute } from "./stores/stores";
   import { runAttempts } from "./stores/stores";
   import { settings } from "./stores/stores";
+  import { timeFromStart } from "./stores/stores";
   import { conf } from "./config/config.js";
 
   import * as Format from "./core/format";
   import { Sound } from "./core/Sound";
   import { Circle } from "./core/Circle";
+  import Graph from "./Graph.svelte"; 
 
   import Button, { Label } from "@smui/button";
 
@@ -43,7 +45,7 @@
   let ctx;
   let mobile = false;
 
-  let timerStep;
+  let timerStep: number;
   let sumTime = 0;
   let startTime;
   let idealExecutingTime = 0;
@@ -59,6 +61,15 @@
   let pauseStartTime = 0;
   let pauseStopTime = 0;
   let pauseTempState;
+
+  let circleConfig = {
+    bgColor: 'black',
+    frontColor: 'white', 
+    bgLineWidth: conf.bgLineWidth,
+    frontLineWidth: conf.frontLineWidth
+  }
+
+  const body = document.querySelector('body');
 
   const unsubscribe = state.subscribe((value) => {
     currentState = value;
@@ -104,14 +115,14 @@
 
   $: rHours = Math.trunc(remaining / 60 / 60);
   $: rMinutes = Math.trunc(remaining / 60) ;
-  $: rSeconds = Math.trunc(remaining % 60);
+  $: rSeconds = Math.round(remaining % 60);
   
   $: timerFormatted = () => {
-    return timer < 61
+    return timer < 60
       ? Math.round(timer)
-      : Format.getMinutesInTwoDigitFormat(Math.trunc(timer / 60)) +
-          ":" +
-          Format.getSecondsInTwoDigitFormat(Math.trunc(timer % 60));
+      : Format.getMinutesInTwoDigitFormat(Math.trunc(timer / 60)) 
+        + ":" 
+        + Format.getSecondsInTwoDigitFormat(Math.trunc(timer % 60));
   };
 
   onMount(async () => {
@@ -145,15 +156,15 @@
     started = true;
     init();
     state.update(s => states.countdown);
-    scrollTo("clock-common");
+    scrollTo("btn_start");
     goIteration(0);
   }
 
   function init() {
     console.log("init");
-    preWorkTime = 3;
+    preWorkTime = conf.preWorkTime;
     remaining = allTime;
-    timerStep = 50;
+    timerStep = conf.timerStep;
     sumTime = 0;
     counter = 0;
     curInnerLap = 1;
@@ -164,6 +175,9 @@
     preworked = false;
 
     audio = new Sound($mute, "/sounds/tick-tick.mp3");
+    mute.subscribe(newValue => {
+        audio.setMute(newValue);
+    });
 
     pausedTime = 0;
     pauseStartTime = 0;
@@ -174,12 +188,8 @@
       return;
     }
 
-    canvas = document.getElementById("cv");
-    canvas.width = circleWidth;
-    canvas.height = circleHeight;
-    canvas.style.left = 0 + "px";
-    ctx = canvas.getContext("2d");
-    circle = new Circle(ctx, circleWidth, circleHeight, lineWidth);
+    circle = new Circle('cv', circleWidth, circleHeight, lineWidth);
+    circle.setConfig(circleConfig);
     firstStart = false;
   }
 
@@ -228,6 +238,7 @@
         clearInterval(preWorktIntervalId);
         // state.update(state => states.work);
         currentState = states.work;
+        $state = states.work;
         isInitState = false;
         startTime = new Date().getTime();
         console.clear();
@@ -243,7 +254,9 @@
   function work() {
     if (!isInitState) {
       counterTimer = 0;
-      ctx.strokeStyle = conf.colors.work;
+      circleConfig.frontColor = conf.colors.work;
+      circleConfig.frontLineWidth = lap;
+      circle.setConfig(circleConfig);
       isInitState = true;
       curOuterLap++;
     }
@@ -256,7 +269,8 @@
   function relax() {
     if (!isInitState) {
       counterTimer = $settings.relaxTime;
-      ctx.strokeStyle = conf.colors.relax;
+      circleConfig.frontColor = conf.colors.relax;
+      circle.setConfig(circleConfig);
       isInitState = true;
     }
 
@@ -268,7 +282,8 @@
   function recovery() {
     if (!isInitState) {
       counterTimer = conf.recoveryTime + 0.8; // добавочное время, чтобы можно было увидеть иcходные 03:00
-      ctx.strokeStyle = conf.colors.recovery;
+      circleConfig.frontColor = conf.colors.recovery;
+      circle.setConfig(circleConfig);
       isInitState = true;
     } else {
       counterTimer = counterTimer - timerStep / 1000;
@@ -279,6 +294,8 @@
   }
 
   function nextState() {
+    displayActivation(15);
+
     if (paused) {
       goIteration(getDiff());
       return;
@@ -289,6 +306,7 @@
     }
 
     let temp = calcTempData();
+    $timeFromStart = (temp.stateTime - temp.balance) / temp.stateTime;
 
     circle.recalcValues(counterTimer, temp.stateTime);
     circle.draw();
@@ -300,6 +318,12 @@
     }
 
     goIteration(getDiff());
+  }
+
+  function displayActivation(seconds: number) {
+    if (mobile && (remaining % seconds === 0)) {
+      body.click();
+    }
   }
 
   function getTimeOfState(state) {
@@ -368,7 +392,7 @@
         idealExecutingTime / 1000 - (lapTime * (lap - 1) + innerLapTime * curInnerLap)
       );
       temp.nextState = states.work;
-
+      
       return temp;
     }
 
@@ -395,9 +419,15 @@
   // определяем промежуток таймера, когда воспроизводим звук щелчка
   function maybeSound(temp: oneLoopValues) {
     if (
-      !(temp.balance <= 6 && temp.stateTime > 10) 
-      &&
-      !(temp.balance <= 3 && temp.stateTime > 5 && temp.stateTime <= 10)
+      !(
+        (temp.balance <= 20 && temp.stateTime > 60) 
+        ||
+        (temp.balance <= 11 && temp.stateTime >= 30) 
+        ||
+        (temp.balance <= 6 && temp.stateTime > 10) 
+        ||
+        (temp.balance <= 3 && temp.stateTime > 5 && temp.stateTime <= 10)
+      )
     ) {
       return;
     }
@@ -411,13 +441,15 @@
 
   function stopping() {
     remaining = allTime - idealExecutingTime / 1000;
-
+    
+    
     if (remaining == 0) {
       stop();
       progress.set(1, progressOptions);
+      $timeFromStart = 0;
       return true;
     } else {
-      progress.set(((allTime - remaining) * 100) / allTime / 100, progressOptions);
+      progress.set(((allTime - remaining)) / allTime, progressOptions);
       return false;
     }
   }
@@ -428,7 +460,8 @@
     sumTime = 0;
     audio.stop();
     clearInterval(engineStepTimeoutId);
-    ctx.strokeStyle = conf.colors.stop;
+    circleConfig.frontColor = conf.colors.stop;
+      circle.setConfig(circleConfig);
     circle.recalcValues(counterTimer, $settings.workTime);
     circle.draw();
     state.update(s => states.end);
@@ -569,7 +602,7 @@
 
   @media screen and (min-width: 291px) and (max-width: 479px) {
     .time-block {
-      font-size: 1.5em !important;
+      font-size: 2em !important;
       width: 150px !important;
       height: 150px !important;
       margin: 25px auto;
@@ -701,7 +734,7 @@
   }
 
   .text--disabled {
-    opacity: 0.5;
+    opacity: 0.2;
     transition: opacity 0.5s cubic-bezier(0, 0, 1, 1);
   }
 
@@ -811,7 +844,7 @@
           class:shadow--disabled={!validateWorkTime()}
           class:shadow--active={validateWorkTime()}
           transition:fade={{delay: 0, duration: 0, easing: cubicOut}}>
-          <label style="font-size: 4em;"> {$settings.workTime} </label>
+          <span style="font-size: 4em;"> {$settings.workTime} </span>
         </div>
         <span style="width: 100%; margin-top: 1.5em;">Время нагрузки</span>
         <input
@@ -830,7 +863,7 @@
           class:shadow--disabled={!validateWorkTime()}
           class:shadow--active={validateWorkTime()}
           transition:fade={{delay: 0, duration: 0, easing: cubicOut}}>
-          <label style="font-size: 4em; "> {$settings.relaxTime} </label>
+          <span style="font-size: 4em; "> {$settings.relaxTime} </span>
         </div>
         <span style="width: 100%; margin-top: 1.5em;">Время отдыха</span>
         <input
@@ -953,6 +986,8 @@
     <progress value={$progress} />
   </div>
 
+  <Graph allTime={allTime}/>
+  
   <!-- <audio id="audio">
     <source src="/sounds/sek.mp3" type="audio/mpeg">
     Тег audio не поддерживается вашим браузером.
