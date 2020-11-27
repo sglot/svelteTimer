@@ -306,7 +306,7 @@
     }
 
     let temp = calcTempData();
-    $timeFromStart = ((temp.stateTime - temp.balance) * 100) / temp.stateTime / 100;
+    $timeFromStart = (temp.stateTime - temp.balance) / temp.stateTime;
 
     circle.recalcValues(counterTimer, temp.stateTime);
     circle.draw();

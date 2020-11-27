@@ -1,16 +1,19 @@
 export class Graph {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+
     private step: number;
     private idealX: number;
-    private allTime: number;
-    private isConfigured: boolean = false;
-    private TWO_PI: number = 2 * Math.PI;
-    private lastX: number = 1;
-    private newX: number = 1;
+    private lastX: number;
+    private newX: number;
     private w: number;
     private h: number;
+    private rad: number;
 
+    private isConfigured: boolean = false;
+    private TWO_PI: number = 2 * Math.PI;
+    private M_PI_D_2: number = -Math.PI / 2;
+    private borderWidth: number = 2;
 
     constructor(id: string) {
         this.canvas = document.getElementById(id) as HTMLCanvasElement;
@@ -24,17 +27,25 @@ export class Graph {
     }
 
     init() {
-        this.w = 1;
-        this.h = this.canvas.height - 2;
-
-        this.ctx.fillStyle = '#eeeeee';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.drawBorder('#222');
+        this.w = 2;
+        this.h = this.canvas.height - this.w * 2;
+        
+        this.drawBorder('#0a23d2');
     }
 
     drawBorder(color: string) {
-        this.ctx.strokeStyle = color;
+        this.ctx.strokeStyle = '#222222';
         this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.drawPaper();
+    }
+
+    drawPaper() {
+        this.ctx.fillStyle = '#eeeeee';
+        this.ctx.fillRect(this.borderWidth, this.borderWidth, this.canvas.width - this.borderWidth * 2, this.canvas.height - this.borderWidth * 2);
     }
 
     drawStep(color: string, divide: boolean) {
@@ -49,7 +60,10 @@ export class Graph {
                 return;
             }
 
-            this.drawPacer(pacerX, pacerY, color, divide);
+            // if (pacerX + this.rad < this.canvas.width - this.borderWidth) {
+                this.drawPacer(pacerX, pacerY, color, divide);
+            // }
+            
             this.drawColumn(this.lastX, this.w, 1, this.h, color);
             this.newX += this.step;
             this.lastX = this.newX;
@@ -57,13 +71,17 @@ export class Graph {
         }
 
         if (this.idealX < this.lastX) {
-            this.drawPacer(pacerX, pacerY, color, divide);
+            if (pacerX + this.rad < this.canvas.width - this.borderWidth) {
+                this.drawPacer(pacerX, pacerY, color, divide);
+            }
             this.drawColumn(this.lastX, this.w, this.step, this.h, color);
             this.idealX += this.step;
             return;
         }
 
-        this.drawPacer(pacerX, pacerY, color, divide);
+        if (pacerX + this.rad < this.canvas.width - this.borderWidth) {
+            this.drawPacer(pacerX, pacerY, color, divide);
+        }
         this.drawColumn(this.lastX, this.w, this.step, this.h, color);
 
         this.lastX += this.step;
@@ -79,28 +97,43 @@ export class Graph {
     }
 
     private drawPacer(x: number, y: number, color: string, divide: boolean) {
-        let rad = this.canvas.height / 2 - 2; // середина минус границы
+        
         this.ctx.fillStyle = this.ctx.strokeStyle = color;
         this.ctx.beginPath();
-        this.ctx.arc(x, y, rad, -Math.PI / 2, 2*Math.PI);
+        this.ctx.arc(x, y, this.rad, -Math.PI / 2, Math.PI / 2, false);
         this.ctx.closePath();
         this.ctx.fill();
 
         if (divide) {
-            this.ctx.strokeStyle = 'rgba(100, 100, 100, 0.5)';
-            this.ctx.stroke();
-        }
+   
+            this.ctx.fillStyle = '#eeeeee';
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, this.rad, this.M_PI_D_2, this.TWO_PI, false);
+            this.ctx.closePath();
+            this.ctx.fillStyle = '#eeeeee';
+            this.ctx.fill();
+            this.ctx.fillStyle = color;
+            this.ctx.fill();
 
+            this.ctx.strokeStyle = 'rgba(100, 100, 100, 0.5)';
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, this.rad, Math.PI / 2, 2*Math.PI /3, false);
+            this.ctx.closePath();
+            this.ctx.stroke();
+            // this.drawColumn(this.lastX, this.w, this.step, this.h, color);
+        }
     }
 
     setParams(allTime: number, timerStep: number) {
         this.init();
+        this.step = ((this.canvas.width - this.borderWidth * 2) / allTime) * (timerStep / 1000);
+        this.lastX = this.borderWidth;
+        this.newX = this.borderWidth;
+        this.isConfigured = true;
+        this.rad = this.canvas.height / 2 - this.borderWidth; // середина минус границы
 
-        this.step = (this.canvas.width / allTime) * (timerStep / 1000);
-        this.allTime = allTime;
         console.log('step=' + this.step);
         console.log('width=' + this.canvas.width);
-        this.isConfigured = true;
     }
 
     configured() {
@@ -108,13 +141,12 @@ export class Graph {
     }
 
     drawToEnd(color: string) {
-        this.drawColumn(this.lastX - 1, this.w, this.canvas.width - this.lastX, this.h, color);
-        this.drawBorder('#000');
+        this.drawColumn(this.lastX - 1, this.w, this.canvas.width  - this.lastX-1, this.h, color);
     }
 
     dropConfigured() {
-        this.lastX = 1;
-        this.newX = 1;
+        this.lastX = this.borderWidth+10;
+        this.newX = this.borderWidth+10;
         this.isConfigured = false;
     }
 
