@@ -10,7 +10,7 @@ import typescript from '@rollup/plugin-typescript';
 const production = !process.env.ROLLUP_WATCH;
 const postcssOptions = () => ({
     extensions: ['.scss', '.sass'],
-    extract: 'public/build/sass_bundle.css',
+    extract: 'sass_bundle.css',
     minimize: true,
     use: [
         ['sass', {
@@ -40,8 +40,9 @@ export default {
 			// we'll extract any component CSS out into
 			// a separate file - better for performance
 			css: css => {
-				css.write('public/build/bundle.css');
+				css.write('bundle.css');
 			},
+
 			preprocess: autoPreprocess(),
 		}),
 

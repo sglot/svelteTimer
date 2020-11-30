@@ -1,17 +1,21 @@
 <script lang="ts">
     import Timer from './Timer.svelte';
 	import Info from './Info.svelte';
-	import Settings from './Settings.svelte';
+	import AdvancedSettings from './settings/AdvancedSettings.svelte';
+	import Settings from './settings/Settings.svelte';
 </script>
 
 <main>
+		
 	<Info/>
 
 	<p>Svelte Timer. Inspired by "Chto, opyat?"</p>
 
 	<Settings/>
 
-    <Timer/>
+	<Timer/>
+	
+	<AdvancedSettings/>
 </main>
 
 <style>

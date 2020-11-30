@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Graph } from "./core/Graph";
-    import { timeFromStart } from "./stores/stores";
-    import { conf } from "./config/config.js";
-    import { state, stateList, settings } from "./stores/stores";
+    import { Graph } from "../core/Graph";
+    import { timeFromStart } from "../stores/stores";
+    import { conf } from "../config/config";
+    import { state, stateList, settings } from "../stores/stores";
 
     export let allTime: number;
 

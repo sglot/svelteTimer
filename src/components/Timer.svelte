@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { state } from "./stores/stores";
-  import { stateList } from "./stores/stores";
-  import { mute } from "./stores/stores";
-  import { runAttempts } from "./stores/stores";
-  import { settings } from "./stores/stores";
-  import { timeFromStart } from "./stores/stores";
-  import { conf } from "./config/config.js";
+  import { state } from "../stores/stores";
+  import { stateList } from "../stores/stores";
+  import { mute } from "../stores/stores";
+  import { runAttempts } from "../stores/stores";
+  import { settings } from "../stores/stores";
+  import { timeFromStart } from "../stores/stores";
+  import { conf } from "../config/config.js";
 
-  import * as Format from "./core/format";
-  import { Sound } from "./core/Sound";
-  import { Circle } from "./core/Circle";
+  import * as Format from "../core/format";
+  import { Sound } from "../core/Sound";
+  import { Circle } from "../core/Circle";
   import Graph from "./Graph.svelte"; 
 
   import Button, { Label } from "@smui/button";
@@ -22,7 +22,7 @@
 
   let circleWidth = conf.circleWidth;
   let circleHeight = conf.circleHeight;
-  let lineWidth = conf.lineWidth;
+  let lineWidth = conf.frontLineWidth;
 
   let curInnerLap = 1;
   let curOuterLap = 0;
