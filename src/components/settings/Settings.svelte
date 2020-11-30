@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { state, stateList } from "./stores/stores";
+    import { state, stateList } from "../../stores/stores";
     import IconButton, { Icon } from "@smui/icon-button";
     import Snackbar, {Actions, Label} from '@smui/snackbar';
     import { onMount } from "svelte";
-    import { settings, makeDefaultSettings } from "./stores/stores";
+    import { settings, makeDefaultSettings } from "../../stores/stores";
     
     let settingsIsSaved = false;
     let savedSettingsSnackbar;
