@@ -22,25 +22,28 @@ let progBarList: progressBar[] =
         },
     ];
 
-
-let advSettings: [...advancedSettings] = [
-    {
-        name:       "saveHistory",
+let advSettings: Record<string, advancedSettings> = {
+    "saveHistory":              {
         label:      "Сохранение результатов в историю",
         enabled:    true,
     },
-    {
-        name:       "autoloadSettingsConfig",
+
+    "autoloadSettingsConfig":   {
         label:      "Автозагрузка сохранённой конфигурации",
         enabled:    true
     },
-    {
-        name:       "progressBar",
+
+    "progressBar":              {
         label:      "Индикатор прогресса",
         selected:   progBarList[0].name
     },
+    
+    "barWeight": {
+        label:      "Дополнительный вес в кг",
+        value:      0
+    },
+}
 
-]
 
 export function makeDefaultSettings(): selectableParametersConfiguration {
     return {

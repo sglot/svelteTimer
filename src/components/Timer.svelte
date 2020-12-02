@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { state } from "../stores/stores";
+  import { advancedSettings, progressBarList, state } from "../stores/stores";
   import { stateList } from "../stores/stores";
   import { mute } from "../stores/stores";
   import { runAttempts } from "../stores/stores";
@@ -983,10 +983,15 @@
       <span class="label-time-text">Осталось:
         <span class="data-time-text">{rMinutes} мин {rSeconds} сек</span></span>
     </div>
+
+    {#if $advancedSettings.progressBar.selected === $progressBarList[0].name}
     <progress value={$progress} />
+    {:else if  $advancedSettings.progressBar.selected === $progressBarList[1].name}
+    <Graph allTime={allTime}/>
+    {/if}
   </div>
 
-  <Graph allTime={allTime}/>
+  
   
   <!-- <audio id="audio">
     <source src="/sounds/sek.mp3" type="audio/mpeg">

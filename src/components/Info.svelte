@@ -30,13 +30,13 @@
     .pressed {
         display: inline-block;
         -webkit-transition: -webkit-transform 0.5s;
-        transition: transform 0.5s;
+        transition: transform 0.2s;
     }
 
     .pressed:hover {
         color: darkcyan;
-        -webkit-transform: scale(0.6);
-        transform: scale(0.6);
+        -webkit-transform: translate(0, -2px);
+        transform: translate(0, -2px);
     }
 </style>
 

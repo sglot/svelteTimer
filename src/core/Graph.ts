@@ -27,8 +27,9 @@ export class Graph {
     }
 
     init() {
-        this.w = 2;
+        this.w = this.canvas.height < 20 ? 1 : 2;
         this.h = this.canvas.height - this.w * 2;
+        this.borderWidth = this.w;
         
         this.drawBorder('#0a23d2');
     }

@@ -27,11 +27,11 @@ type circleConfig = {
 }
 
 type advancedSettings = {
-  name:           string,
   label:          string,
   enabled?:       boolean,
   selected?:      progressBarType,
-}[]
+  value?:         number,
+}
 
 type progressBarType = "default" | "separated"
 
@@ -39,3 +39,5 @@ type progressBar = {
   name:           progressBarType,
   label:          string,
 }
+
+type required_fields = readonly string[];

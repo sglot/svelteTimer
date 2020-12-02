@@ -30,7 +30,6 @@
         let divide = lastState != $state;
 
         if ($state == $stateList.work) {
-            // console.log('wooooooooooork!!!');
             graph.drawStep(conf.colors.work + (divide ? 1 : (0.5 + newValue / 2)), divide);
             lastState = $state;
             return;
@@ -70,22 +69,13 @@
         height: 20px;
     }
 
-    .pressed {
-        display: inline-block;
-        -webkit-transition: -webkit-transform 0.5s;
-        transition: transform 0.55s;
-    }
-
-    .pressed:hover {
-        color: darkcyan;
-        /* transition: translate 0.2s cubic-bezier(0, 0, 1, 1); */
-        -webkit-transform: scale(0.6);
-        transform: scale(0.6);
-        transition: transform 0.5s;
-        transition: transform 0.5s;
+    @media (max-width: 640px) {
+        .time-indicator {
+            height: 10px;
+        }
     }
 </style>
 
 <div>
-    <canvas id="graph" class="time-indicator pressed"/>
+    <canvas id="graph" class="time-indicator"/>
 </div>

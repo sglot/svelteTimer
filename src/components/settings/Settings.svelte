@@ -3,27 +3,36 @@
     import IconButton, { Icon } from "@smui/icon-button";
     import Snackbar, {Actions, Label} from '@smui/snackbar';
     import { onMount } from "svelte";
-    import { settings, makeDefaultSettings } from "../../stores/stores";
+    import { settings, makeDefaultSettings, advancedSettings } from "../../stores/stores";
     
     let settingsIsSaved = false;
     let savedSettingsSnackbar;
 
+    const STORAGE_KEY = "savedSettings";
+
     onMount(() => {
-        initSettings();
+        // advanced settings должны загрузиться раньше, потому что есть зависимость
+        setTimeout(() => {
+            initSettings();
+        }, 1);
         console.log($state);
     });
 
     function initSettings(): void {
         let settings = getSavedSettings();
+
         if (validation(settings)) {
             console.log("validation is successfuly");
             settingsIsSaved = true;
         }
-        loadSettingsConfig();       
+
+        if ($advancedSettings.autoloadSettingsConfig.enabled === true) {
+            loadSettingsConfig();       
+        }
     }
 
     function getSavedSettings(): string {
-        return localStorage.getItem("savedSettings");
+        return localStorage.getItem(STORAGE_KEY);
     }
 
     function validation(settings: string): selectableParametersConfiguration | null {
@@ -40,7 +49,7 @@
                 laps: object.laps,
             };
         } catch (e) {
-            console.log(e.message);
+            console.error(e.message);
             return null;
         }
 
@@ -54,7 +63,7 @@
             laps: $settings.laps,
         };
 
-        localStorage.setItem("savedSettings", JSON.stringify(nativeObj));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nativeObj));
         settingsIsSaved = true;
         savedSettingsSnackbar.open();
         console.log("config was saved");
@@ -65,6 +74,7 @@
         let loaded = validation(str);
         if (!loaded) {
             loaded = makeDefaultSettings();
+            console.log("loading default settings");
         }
 
         $settings = loaded;
