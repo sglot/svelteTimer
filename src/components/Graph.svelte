@@ -1,16 +1,24 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Graph } from "../core/Graph";
+    import { interpolateString as interpolate } from 'd3-interpolate';
+    import { tweened } from 'svelte/motion';
+
     import { timeFromStart } from "../stores/stores";
     import { conf } from "../config/config";
     import { state, stateList, settings } from "../stores/stores";
-
+    import { GraphManager } from "../core/graph/GraphManager";
+    
     export let allTime: number;
+    export let variant: string;
 
-    let graph: Graph;
+    let graphManager: GraphManager;
     let isInitialized = false;
-    let config = null;
     let lastState;
+
+    let color = 'rgba(180, 180, 180, 1';
+    const time = tweened(8);
+    const value = tweened(10);
+    const shape =  tweened('M0 10 L0 10', { interpolate });
 
     onMount(() => {
         initGraph();
@@ -18,49 +26,54 @@
         lastState = $stateList.work;
     });
     
+    function initGraph() {
+        graphManager = new GraphManager();  
+        graphManager.setGraph(variant);
+         
+        if (variant !== "separated" ) {
+            shape.set(`M0 10 L${graphManager.getWidth()} 10`, { interpolate });
+        }
+       
+    };
+
     timeFromStart.subscribe(newValue => {
         if (!isInitialized) return;
 
-        if (!graph.configured()) {
-            graph.setParams(allTime, conf.timerStep);
+        if (!graphManager.configured()) {
+            graphManager.setParams(allTime, conf.timerStep, time, shape);
             console.log('configured!!!');
             return;
         }
 
         let divide = lastState != $state;
+        lastState = $state;
 
         if ($state == $stateList.work) {
-            graph.drawStep(conf.colors.work + (divide ? 1 : (0.5 + newValue / 2)), divide);
-            lastState = $state;
+            color = conf.colors.work + '1'; //(divide ? 1 : (0.5 + newValue / 2));
+            graphManager.drawStep(color, divide);
             return;
         }
 
         if ($state == $stateList.relax) {
-            graph.drawStep(conf.colors.relax + (1 - newValue / 2), divide);
-            lastState = $state;
+            color = conf.colors.relax + '1'; //+ (1 - newValue / 2);
+            graphManager.drawStep(color, divide);
             return;
         }
 
         if ($state === $stateList.recovery) {
-            
-            graph.drawStep(conf.colors.recovery + (0.5 + newValue / 2), divide);
-            lastState = $state;
+            color = conf.colors.recovery + '1'; //+ (0.5 + newValue / 2);
+            graphManager.drawStep(color, divide);
             return;
         }
 
         if ($state === $stateList.end) {
-            console.log('is stop + drop configured graph');
-            graph.drawToEnd(conf.colors.work + '1');
-            graph.dropConfigured();
-            lastState = $state;
+            graphManager.drawToEnd(conf.colors.work + '1');
+            graphManager.dropConfigured();
             return;
         }
 
     });
 
-    function initGraph() {
-        graph = new Graph('graph');  
-    };
 </script>
 
 <style>
@@ -69,13 +82,37 @@
         height: 20px;
     }
 
-    @media (max-width: 640px) {
-        .time-indicator {
-            height: 10px;
-        }
-    }
 </style>
 
-<div>
-    <canvas id="graph" class="time-indicator"/>
-</div>
+{#if variant === "separated"}
+    <div>
+        <canvas id="graph-separated" class="time-indicator"/>
+    </div>
+{/if}
+
+{#if variant === "tiny"}
+    <div id="graph-tiny" class="time-indicator">
+        {#if isInitialized}
+            <svg viewBox="0 0 {graphManager.getWidth()} {graphManager.getHeight()}">
+                <g class="canvas">
+
+                    <g class="graph">
+                        <path
+                            d="{$shape.toString()}"
+                            stroke="{color})"
+                            stroke-width="5"
+                            fill="{color})"
+                        />
+
+                        <circle
+                            cx="{$time}"
+                            cy="{$value}"
+                            r="{graphManager.getCursorRadius()}"
+                            fill="#004eff"
+                        />
+                    </g>
+                </g>
+            </svg>
+        {/if}
+    </div>
+{/if}

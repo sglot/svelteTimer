@@ -33,7 +33,7 @@ type advancedSettings = {
   value?:         number,
 }
 
-type progressBarType = "default" | "separated"
+type progressBarType = "default" | "separated" | "tiny"
 
 type progressBar = {
   name:           progressBarType,

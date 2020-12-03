@@ -20,6 +20,10 @@ let progBarList: progressBar[] =
             name: "separated",
             label: "С отсечками"
         },
+        {
+            name: "tiny",
+            label: "Тонкий"
+        },
     ];
 
 let advSettings: Record<string, advancedSettings> = {

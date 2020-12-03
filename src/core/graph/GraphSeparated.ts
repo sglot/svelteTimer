@@ -1,4 +1,6 @@
-export class Graph {
+import type { GraphInterface } from "./GraphInterface";
+
+export class GraphSeparated implements GraphInterface {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
 
@@ -150,5 +152,4 @@ export class Graph {
         this.newX = this.borderWidth+10;
         this.isConfigured = false;
     }
-
 }

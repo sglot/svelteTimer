@@ -985,13 +985,21 @@
     </div>
 
     {#if $advancedSettings.progressBar.selected === $progressBarList[0].name}
-    <progress value={$progress} />
+
+      <progress value={$progress} />
+
     {:else if  $advancedSettings.progressBar.selected === $progressBarList[1].name}
-    <Graph allTime={allTime}/>
+
+      <Graph allTime={allTime} variant={$progressBarList[1].name}/>
+
+    {:else if  $advancedSettings.progressBar.selected === $progressBarList[2].name}
+
+      <Graph allTime={allTime} variant={$progressBarList[2].name}/>
+      
     {/if}
   </div>
 
-  
+
   
   <!-- <audio id="audio">
     <source src="/sounds/sek.mp3" type="audio/mpeg">
