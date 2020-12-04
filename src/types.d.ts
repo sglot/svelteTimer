@@ -40,4 +40,20 @@ type progressBar = {
   label:          string,
 }
 
-type required_fields = readonly string[];
+type required_fields  = readonly string[];
+
+type ruleType         = "required";
+
+type rules            = Record<ruleType, readonly string[]>
+
+type history = [...historyRow];
+
+type historyRow = {
+  id:         number,
+  date:       string,
+  work:       number,
+  relax:      number,
+  laps:       number,
+  success:    boolean,
+  time?:      string
+}

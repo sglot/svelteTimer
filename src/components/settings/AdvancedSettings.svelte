@@ -91,7 +91,8 @@
 
                 let element = newSettings[key];
 
-                if (typeof element.label !== "string" ) {
+                // required too
+                if (element.label == undefined || typeof element.label !== "string" ) {
                     throw new Error('label is not string: object = ' + key);
                 }
 

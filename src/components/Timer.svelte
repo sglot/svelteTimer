@@ -19,6 +19,7 @@
   import { fade } from "svelte/transition";
   import { slide } from "svelte/transition";
   import { onMount } from "svelte";
+import { HistoryRepository } from "../repository/HistoryRepository";
 
   let circleWidth = conf.circleWidth;
   let circleHeight = conf.circleHeight;
@@ -458,17 +459,42 @@
     console.log("stop");
     timer = 0;
     sumTime = 0;
+
     audio.stop();
     clearInterval(engineStepTimeoutId);
     circleConfig.frontColor = conf.colors.stop;
-      circle.setConfig(circleConfig);
+    circle.setConfig(circleConfig);
     circle.recalcValues(counterTimer, $settings.workTime);
     circle.draw();
+
     state.update(s => states.end);
     preworked = false;
     started = false;
 
     scrollTo("btn_start");
+
+    saveHistory();
+  }
+
+  function saveHistory() {
+    var today = new Date();
+
+    let history = new HistoryRepository();
+    let allHistory: history = history.load();
+
+    let historyRow: historyRow = {
+      "id": Object.keys(allHistory).length + 1,
+      "date": today.toLocaleString(),
+      "work": $settings.workTime,
+      "relax": $settings.relaxTime,
+      "laps": $settings.laps,
+      "success": true
+    }
+
+    console.log('timer -> ', allHistory);
+    allHistory.push(historyRow);
+    
+    history.save(allHistory);
 
     runAttempts.set(Number.parseInt(localStorage.getItem("runAttempts")) + 1);
 
@@ -520,12 +546,6 @@
 </script>
 
 <style>
-  main {
-    text-align: center;
-    padding: 1em;
-    max-width: 240px;
-    margin: 0 auto;
-  }
 
   h1 {
     color: #ff3e00;

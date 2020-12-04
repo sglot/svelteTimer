@@ -13,3 +13,19 @@ $mdc-theme-background: #fff;
 $mdc-theme-surface: #fff;
 
 $mdc-theme-error: $material-color-red-900;
+
+.material-icons {
+    line-height: 2!important;
+}
+
+@media (max-width: 400px) {
+    
+
+    .mdc-data-table__table {
+        white-space: normal!important;
+    }
+
+    .mdc-data-table__cell {
+        font-size: 0.6rem;
+    }
+}

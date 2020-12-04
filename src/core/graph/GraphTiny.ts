@@ -67,6 +67,7 @@ export class GraphTiny implements GraphInterface {
 
     dropConfigured() {
         this.isConfigured = false;
+        this.time.set(this.cursorRadius, {duration: 200, easing: x => x});
     }
 
     progressInc() {

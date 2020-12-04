@@ -1,16 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { mute } from "../stores/stores";
-    import { runAttempts } from "../stores/stores";
+    import History from "./History.svelte";
 
     onMount(() => {
-        // инициализация количества попыток запуска на текущем устройстве
-        runAttempts.set(parseInt(localStorage.getItem("runAttempts")));
-        if (!isFinite($runAttempts) || $runAttempts === null) {
-            runAttempts.set(0);
-            localStorage.setItem("runAttempts", "0");
-        }
-
         //инициализация звук вкл/выкл
         mute.set(localStorage.getItem("mute") === "true" ? true : false);
         localStorage.setItem("mute", $mute.toString());
@@ -43,11 +36,7 @@
 <div class="info-header">
     <span>v. 1.0.2 | </span>
     <span>Запуск
-        <span
-            style="text-decoration:underline steelblue; cursor: pointer;"
-            class="pressed">
-            {$runAttempts}
-        </span>
+        <History/>
         |
     </span>
     <span>Звук
