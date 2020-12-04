@@ -31,4 +31,17 @@
 			max-width: none;
 		}
 	}
+
+	main {
+    text-align: center;
+    padding: 1em;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 640px) {
+    main {
+		padding-left: 0;
+		padding-right: 0;
+  	}
+  }
 </style>
