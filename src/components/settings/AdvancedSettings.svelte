@@ -21,7 +21,13 @@
     let isLoaded = false;
 
     const STORAGE_KEY = "advancedSettings";
-    const REQUIRED: required_fields = ["saveHistory", "autoloadSettingsConfig", "progressBar", "barWeight"];
+    const REQUIRED: required_fields = [
+        "saveHistory", 
+        "autoloadSettingsConfig", 
+        "progressBar", 
+        "barWeight",
+        "introduction"
+    ];
     
     $: weight = () => {
         //  Сохранение не по клику на бегунок а при изменении значения
@@ -167,6 +173,26 @@
         transform: translate(0, 5px);
         transition: transform 0.1s;
     }
+
+    .progress__block {
+        display: flex; 
+        justify-content: left;
+
+    }
+
+    @media (max-width: 640px) {
+    
+        .progress__block {
+            flex-flow: column;
+        }
+    }
+
+    @media (max-width: 450px) {
+    
+    .progress__items {
+        display: grid;
+    }
+}
 </style>
 
 {#if $state === $stateList.settings || $state === $stateList.end}
@@ -201,10 +227,9 @@
             class="advanced-settings__block"
             transition:slide={{ delay: 0, duration: 500, easing: cubicOut }}>
             <div
-                class="settings__element"
-                style="display: flex; justify-content: left;">
+                class="settings__element progress__block">
                 <div>Индикатор прогресса:</div>
-                <div>
+                <div class="progress__items">
                     {#each $progressBarList as option}
                         <FormField style="margin-right: 1em;">
                             <Radio
@@ -224,6 +249,17 @@
                         on:click={save} />
                     <span slot="label">
                         {$advancedSettings.autoloadSettingsConfig.label}
+                    </span>
+                </FormField>
+            </div>
+
+            <div class="settings__element">
+                <FormField align="start">
+                    <Switch
+                        bind:checked={$advancedSettings.introduction.enabled}
+                        on:click={save} />
+                    <span slot="label">
+                        {$advancedSettings.introduction.label}
                     </span>
                 </FormField>
             </div>
