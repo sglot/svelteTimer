@@ -119,7 +119,9 @@
         </IconButton>
     </div>
 
-    <Snackbar leading  bind:this={savedSettingsSnackbar}>
-        <Label>Настройки успешно сохранены</Label>
-    </Snackbar>
+    
 {/if}
+
+<Snackbar leading  bind:this={savedSettingsSnackbar}>
+    <Label>Настройки успешно сохранены</Label>
+</Snackbar>

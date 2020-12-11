@@ -14,10 +14,6 @@ $mdc-theme-surface: #fff;
 
 $mdc-theme-error: $material-color-red-900;
 
-.material-icons {
-    line-height: 2!important;
-}
-
 @media (max-width: 400px) {
     
 
@@ -25,7 +21,7 @@ $mdc-theme-error: $material-color-red-900;
         white-space: normal!important;
     }
 
-    .mdc-data-table__cell {
-        font-size: 0.6rem;
-    }
+    // .mdc-data-table__cell {
+    //     font-size: 0.6rem;
+    // }
 }

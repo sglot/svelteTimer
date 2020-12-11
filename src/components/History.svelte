@@ -104,10 +104,23 @@
         text-align: left;
         height: 50%;
     }
+    
     .time--mobile {
         height: 50%;
         text-align: left;
         font-style: italic;
+    }
+
+    .history-buttons__row {
+        height: 2.5em;
+    }
+
+    .table-cell__combo {
+        font-size: 1.25em;
+    }
+
+    .history-icons_mobile {
+        line-height: 2em;
     }
 </style>
 
@@ -123,9 +136,10 @@
         bind:offsetWidth={width}
         id="history"
         transition:slide={{ delay: 100, duration: 500, easing: cubicOut }}>
-        {#if mobile}
-            <div style="background-color: hsla(0, 0%, 100%, 0.8);">
-                <h2>История</h2>
+
+        <div style="background-color: hsla(0, 0%, 100%, 0.8);">
+            <h2>История</h2>
+            <div class="history-buttons__row">
                 <span class="material-icons"> history </span>
                 <span
                     on:click={toggleShow}
@@ -133,33 +147,35 @@
                     close
                 </span>
             </div>
+        </div>
 
+        {#if mobile}
             <div>
                 <DataTable table$aria-label="History">
                     <Head>
                         <Row>
                             <Cell>
-                                <span class="material-icons">
+                                <span class="material-icons history-icons_mobile">
                                     format_list_numbered_rtl
                                 </span>
                             </Cell>
                             <Cell>
-                                <span class="material-icons">
+                                <span class="material-icons history-icons_mobile">
                                     calendar_today
                                 </span>
                             </Cell>
                             <Cell>
-                                <span class="material-icons work">
+                                <span class="material-icons work history-icons_mobile">
                                     timelapse
                                 </span>
                             </Cell>
                             <Cell>
-                                <span class="material-icons relax">
+                                <span class="material-icons relax history-icons_mobile">
                                     timelapse
                                 </span>
                             </Cell>
                             <Cell>
-                                <span class="material-icons">
+                                <span class="material-icons history-icons_mobile">
                                     trip_origin
                                 </span>
                             </Cell>
@@ -169,8 +185,8 @@
                         {#each history as row}
                             <Row>
                                 <Cell>
-                                    <p>{row.id}</p>
-                                    <p>
+                                    <p class="table-cell__combo">{row.id}</p>
+                                    <p class="table-cell__combo">
                                         {#if row.success === true}
                                             <span
                                                 class="material-icons completed">
@@ -185,8 +201,8 @@
                                     </p>
                                 </Cell>
                                 <Cell>
-                                    <p class="date--mobile">{row.date}</p>
-                                    <p class="time--mobile">{row.time}</p>
+                                    <p class="date--mobile table-cell__combo">{row.date}</p>
+                                    <p class="time--mobile table-cell__combo">{row.time}</p>
                                 </Cell>
                                 <Cell>
                                     <span class="work"> {row.work} </span>
@@ -201,16 +217,8 @@
                     </Body>
                 </DataTable>
             </div>
+
         {:else}
-            <div style="background-color: hsla(0, 0%, 100%, 0.8);">
-                <h2>История</h2>
-                <span class="material-icons"> history </span>
-                <span
-                    on:click={toggleShow}
-                    class="material-icons pressed">
-                    close
-                </span>
-            </div>
 
             <div>
                 <DataTable table$aria-label="History">

@@ -46,6 +46,10 @@ let advSettings: Record<string, advancedSettings> = {
         label:      "Дополнительный вес в кг",
         value:      0
     },
+    "introduction": {
+        label:      "Показывать введение",
+        enabled:    true
+    },
 }
 
 

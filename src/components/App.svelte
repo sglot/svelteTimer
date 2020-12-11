@@ -3,6 +3,7 @@
 	import Info from './Info.svelte';
 	import AdvancedSettings from './settings/AdvancedSettings.svelte';
 	import Settings from './settings/Settings.svelte';
+import Introduction from './Introduction.svelte';
 </script>
 
 <main>
@@ -12,6 +13,8 @@
 	<p>Svelte Timer. Inspired by "Chto, opyat?"</p>
 
 	<Settings/>
+
+	<Introduction/>
 
 	<Timer/>
 	
