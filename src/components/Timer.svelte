@@ -242,7 +242,7 @@ import { HistoryRepository } from "../repository/HistoryRepository";
         $state = states.work;
         isInitState = false;
         startTime = new Date().getTime();
-        console.clear();
+        // console.clear();
         audio.stop();
         preworked = true;
         goIteration(diff);

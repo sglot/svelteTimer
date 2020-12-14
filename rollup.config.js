@@ -6,6 +6,7 @@ import { terser } from 'rollup-plugin-terser';
 import postcss from 'rollup-plugin-postcss';
 import autoPreprocess from 'svelte-preprocess';
 import typescript from '@rollup/plugin-typescript';
+import builtins from 'rollup-plugin-node-builtins';
 
 const production = !process.env.ROLLUP_WATCH;
 const postcssOptions = () => ({
@@ -24,6 +25,7 @@ const postcssOptions = () => ({
         }]
     ]
 });
+const D3_WARNING = /Circular dependency.*d3-interpolate/
 
 export default {
 	input: 'src/main.js',
@@ -62,6 +64,7 @@ export default {
 		
 		postcss(postcssOptions()),
 
+		builtins(),
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
 		!production && serve(),
@@ -79,6 +82,11 @@ export default {
 		chokidar: {
 		    usePolling: true
 		},
+	},
+	onwarn: function ( message ) {
+		if ( D3_WARNING.test(message) ) {
+		  return
+		}
 	}
 };
 

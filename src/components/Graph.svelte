@@ -41,6 +41,7 @@
 
         if (!graphManager.configured()) {
             graphManager.setParams(allTime, conf.timerStep, time, shape);
+            graphManager.drawStep(conf.colors.work + '1', false);
             console.log('configured!!!');
             return;
         }

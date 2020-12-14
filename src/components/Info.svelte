@@ -34,7 +34,7 @@
 </style>
 
 <div class="info-header">
-    <span>v. 1.0.2 | </span>
+    <span>v. 1.2.0 | </span>
     <span>Запуск
         <History/>
         |

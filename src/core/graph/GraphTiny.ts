@@ -42,6 +42,7 @@ export class GraphTiny implements GraphInterface {
         this.path.set(this.shape, { interpolate });
         console.log('time===', time);
         this.step = ((this.w - this.halfH) / allTime) * (timerStep / 1000);
+        this.progress = this.cursorRadius;
         this.isConfigured = true;
     }
 
@@ -67,7 +68,7 @@ export class GraphTiny implements GraphInterface {
 
     dropConfigured() {
         this.isConfigured = false;
-        this.time.set(this.cursorRadius, {duration: 200, easing: x => x});
+        // this.time.set(this.cursorRadius, {duration: 200, easing: x => x});
     }
 
     progressInc() {
@@ -79,7 +80,7 @@ export class GraphTiny implements GraphInterface {
     }
 
     drawToEnd(color: string) {
-        this.time.set(this.w - this.cursorRadius, {duration: 200, easing: x => x});
+        this.time.set(this.w - this.cursorRadius, {duration: 100, easing: x => x});
     }
     
 }
