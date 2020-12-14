@@ -1,12 +1,22 @@
-export function getSecondsInTwoDigitFormat(number: number): string {
-    let seconds = Math.trunc(number % 60);
-    let prefix = seconds < 10 ? "0" : "";
+import { exception } from "console";
 
-    return prefix + seconds;
+export function getSecondsInTwoDigitFormat(number: number): string {
+  if (number < 0) {
+    throw new Error("Секунды не могут быть отрицательными");
   }
+  
+  let seconds = Math.trunc(number % 60);
+  let prefix = seconds < 10 ? "0" : "";
+
+  return prefix + seconds;
+}
 
 export function getMinutesInTwoDigitFormat(minutes: number): string {
-    let prefix = minutes < 10 ? "0" : "";
-
-    return prefix + minutes;
+  if (minutes < 0) {
+    throw new Error("Минуты не могут быть отрицательными");
   }
+
+  let prefix = minutes < 10 ? "0" : "";
+
+  return prefix + minutes;
+}

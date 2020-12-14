@@ -1,5 +1,5 @@
 import { interpolateString as interpolate } from 'd3-interpolate';
-import { tweened } from 'svelte/motion';
+import { tweened  } from 'svelte/motion';
 import type { GraphInterface } from './GraphInterface';
     
 export class GraphTiny implements GraphInterface {
@@ -14,8 +14,8 @@ export class GraphTiny implements GraphInterface {
 
     private box: HTMLElement;
     private shape: string;
-    private path;
-    private time;
+    private path; //Tweened<string>
+    private time; //Tweened<number>
 
     constructor(id: string) {
         this.box = document.getElementById(id) as HTMLElement;
