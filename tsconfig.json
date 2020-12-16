@@ -25,9 +25,9 @@
     },
 
     // project config
-    "include": [
-        "src"
-    ],
+    // "include": [
+    //     "src"
+    // ],
     "typeRoots": [
         "./node_modules/@types/mocha",
         "./node_modules/@types/chai",

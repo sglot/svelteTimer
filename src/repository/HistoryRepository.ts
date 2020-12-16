@@ -22,7 +22,7 @@ export class HistoryRepository extends LocalStorageRepositorySase {
         let loaded = this.validationDataIntegrity(str, HistoryRepository.RULES, modify);
         if (loaded) {
             // $advancedSettings = loaded;
-            console.log(typeof (this) + " config was loaded");
+            console.log(typeof (this) + " !history config was loaded!");
             return loaded;
         }
 

@@ -40,8 +40,11 @@
         showHistory = !showHistory; 
         let body = document.querySelector('body') as HTMLElement;
         console.log(body);
-        body.style.overflow = showHistory ? 'hidden' : 'auto';
         
+        // setTimeout(() => {
+        //     // body.style.overflow = showHistory ? 'hidden' : 'auto';
+        //     console.log("timeout");
+        // }, 500);
     }
 
     let width;
@@ -76,7 +79,7 @@
         width: 100%;
         height: 100%;
         background: rgb(255, 255, 255);
-        overflow: auto;
+        overflow: visible;
         /* opacity: 0.9;
         filter: alpha(opacity=90);  */
         background-color: hsla(0, 0%, 100%, 0.8);
