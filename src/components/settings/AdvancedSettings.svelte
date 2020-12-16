@@ -6,6 +6,8 @@
         progressBarList,
     } from "../../stores/stores";
 
+    import { AdvancedSettingsRepository } from "../../repository/AdvancedSettingsRepository";
+
     import Snackbar, { Actions, Label } from "@smui/snackbar";
     import Switch from "@smui/switch";
     import FormField from "@smui/form-field";
@@ -19,6 +21,7 @@
     let savedSettingsSnackbar;
     let showAdvancedSettings = false;
     let isLoaded = false;
+    let repository: AdvancedSettingsRepository = new AdvancedSettingsRepository();
 
     const STORAGE_KEY = "advancedSettings";
     const REQUIRED: required_fields = [
@@ -51,83 +54,19 @@
         // сначала должен сработать bind:checked а после уже обновлять storage
         // иначе в $advancedSettings будет старое значение
         setTimeout(() => {
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify($advancedSettings)
-            );
+            repository.save($advancedSettings);
             console.log("(advanced) config was saved");
         }, 100);
     }
 
-    function load(): void {
-        let str = getSavedSettings();
-        let loaded = validation(str);
+    function load() {
+        let loaded = repository.load(false);
         if (loaded) {
             $advancedSettings = loaded;
             console.log("(advanced) config was loaded");
         }
         isLoaded = true;
-    }
-
-    function getSavedSettings(): string {
-        return localStorage.getItem(STORAGE_KEY);
-    }
-
-    function validation(
-        settings: string,
-        // required: [...string]
-    ): Record<string, advancedSettings> | null {
-        if (typeof settings !== "string") {
-            return null;
-        }
-
-        let newSettings: Record<string, advancedSettings>;
-        try {
-            newSettings = JSON.parse(settings);
-            let res = true;
-            console.log(newSettings);
-
-            for (let key in REQUIRED) {
-                if (Object.keys(newSettings).indexOf(REQUIRED[key]) == -1) {
-                    throw new Error('has no required param ' + REQUIRED[key]);
-                }
-            }
-
-            for (let key in newSettings) {
-
-                let element = newSettings[key];
-
-                // required too
-                if (element.label == undefined || typeof element.label !== "string" ) {
-                    throw new Error('label is not string: object = ' + key);
-                }
-
-                if (element.enabled == undefined && element.selected == undefined && element.value == undefined) {
-                    throw new Error('enabled and selected and value is undefuned all ');
-                }
-
-                if (element.enabled != undefined && typeof element.enabled !== "boolean") {
-                    throw new Error('type of enabled is not boolean');
-                }
-
-                if (element.selected != undefined && typeof element.selected !== "string") {
-                    throw new Error('type of selected is not string');
-                }
-
-                if (element.value != undefined && !isFinite(element.value)) {
-                    console.error(typeof(element.value));
-                    throw new Error('type of value is not number');
-                }
-            }
-
-            console.log("valid = =", res);
-        } catch (e) {
-            console.error('validation has error: ' + e.message);
-            return null;
-        }
-
-        return newSettings;
-    }
+    }  
 
     function scrollTo(id: string) {
         setTimeout(() => {

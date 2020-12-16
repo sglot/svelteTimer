@@ -26,7 +26,7 @@ let progBarList: progressBar[] =
         },
     ];
 
-let advSettings: Record<string, advancedSettings> = {
+export let advSettings: Record<string, advancedSettings> = {
     "saveHistory":              {
         label:      "Сохранение результатов в историю",
         enabled:    true,

@@ -16,6 +16,10 @@ export class HistoryRepository extends LocalStorageRepositorySase {
         "required": HistoryRepository.REQUIRED,
     };
 
+    getKey(): string {
+        return HistoryRepository.STORAGE_KEY;
+    }
+
     load(modify: boolean = false) {
         let str = this.read();
         let loaded = this.validationDataIntegrity(str, HistoryRepository.RULES, modify);
@@ -37,18 +41,18 @@ export class HistoryRepository extends LocalStorageRepositorySase {
 
         try {
             verifiable = JSON.parse(data);
-            console.log("verifiable history = " + verifiable);
+            // console.log("verifiable history = " + verifiable);
 
             for (let rowIndex in verifiable) {
                 let row: historyRow = verifiable[rowIndex];
-                console.log("verifiable history row = " + row);
+                // console.log("verifiable history row = " + row);
 
                 for (let key in rules.required) {
                     if (Object.keys(row).indexOf(rules.required[key]) == -1) {
                         throw new Error('has no required param ' + rules.required[key]);
                     }
                 }
-                console.log(row.date);
+                // console.log(row.date);
 
                 if (row.date == undefined || typeof row.date !== "string") {
                     throw new Error('date is not string: = ' + typeof (row.date));

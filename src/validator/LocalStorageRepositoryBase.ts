@@ -1,18 +1,19 @@
 import type { PrimitiveRepositoryInterface } from "./PrimitiveRepositoryInterface";
 
 export abstract class LocalStorageRepositorySase implements PrimitiveRepositoryInterface {
-
-    abstract getKey(): string;
+    protected STORAGE_KEY = "history";
 
     read(): string {
-        return localStorage.getItem(this.getKey());
+        return localStorage.getItem(this.STORAGE_KEY);
     }
 
     save(data) {
         localStorage.setItem(
-            this.getKey(),
+            this.STORAGE_KEY,
             JSON.stringify(data)
         );
     }
+
+    abstract modify();
 
 }

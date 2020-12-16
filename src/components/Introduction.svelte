@@ -87,13 +87,13 @@
                 </p>
                 
                 <div class="settings__element">
-                    <FormField align="start">
+                    <FormField align="end">
+                        <span slot="label">
+                            Показывать введение и дальше?
+                        </span>
                         <Switch
                             bind:checked={$advancedSettings.introduction.enabled}
                             on:click={save} />
-                        <span slot="label">
-                            Понятно. Больше не показывать.
-                        </span>
                     </FormField>
                 </div>
 

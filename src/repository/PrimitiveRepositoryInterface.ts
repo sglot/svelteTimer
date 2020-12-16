@@ -1,4 +1,4 @@
 export interface PrimitiveRepositoryInterface {
-    read(): string;
-    save(data: any): void;
+    read(key: string): string;
+    save(key: string, data: any): void;
 }
