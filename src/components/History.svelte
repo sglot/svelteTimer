@@ -42,9 +42,9 @@
         console.log(body);
         
         // setTimeout(() => {
-        //     // body.style.overflow = showHistory ? 'hidden' : 'auto';
+        //     body.style.overflow = showHistory ? 'none' : 'auto';
         //     console.log("timeout");
-        // }, 500);
+        // }, 100);
     }
 
     let width;
@@ -79,7 +79,8 @@
         width: 100%;
         height: 100%;
         background: rgb(255, 255, 255);
-        overflow: visible;
+        overflow: scroll;
+        /* transition: overflow 0.5s cubic-bezier(0, 0, 1, 1); */
         /* opacity: 0.9;
         filter: alpha(opacity=90);  */
         background-color: hsla(0, 0%, 100%, 0.8);

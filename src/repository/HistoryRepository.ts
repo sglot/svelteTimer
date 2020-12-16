@@ -12,10 +12,9 @@ export class HistoryRepository extends LocalStorageRepositorySase {
         "success",
     ];
 
-    protected static RULES: rules = {
+    public static RULES: rules = {
         "required": HistoryRepository.REQUIRED,
     };
-    protected RULES = "history";
 
     load(modify: boolean = false) {
         let str = this.read();
@@ -25,7 +24,7 @@ export class HistoryRepository extends LocalStorageRepositorySase {
             console.log(typeof (this) + " !history config was loaded!");
             return loaded;
         }
-
+        console.log(loaded);
         return [];
     }
 
