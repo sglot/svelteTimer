@@ -69,21 +69,20 @@
 
     .pressed:hover {
         color: darkcyan;
-        -webkit-transform: translate(0, -2px);
-        transform: translate(0, -2px);
     }
 
     #history {
         position: fixed;
         top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
         background: rgb(255, 255, 255);
-        overflow: scroll;
+        overflow-y: scroll;
         /* transition: overflow 0.5s cubic-bezier(0, 0, 1, 1); */
         /* opacity: 0.9;
         filter: alpha(opacity=90);  */
-        background-color: hsla(0, 0%, 100%, 0.8);
+        /* background-color: hsla(0, 0%, 100%, 0.8); */
         z-index: 10;
         box-shadow: 0px 3px 2px 0px #91949b;
     }

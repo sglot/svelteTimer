@@ -47,7 +47,7 @@ export let advSettings: Record<string, advancedSettings> = {
         value:      0
     },
     "introduction": {
-        label:      "Показывать введение",
+        label:      "Показывать приветствие",
         enabled:    true
     },
 }

@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c -w",
+    "dev": "cross-env PORT=3002 rollup -c -w",
     "start": "sirv public",
     "test": "cross-env TS_NODE_FILES=true mocha --exit --require ts-node/register --colors test/**/*.ts",
     "coverage": "nyc npm run test"
@@ -90,6 +90,7 @@
     "@rollup/plugin-commonjs": "^11.1.0",
     "@rollup/plugin-node-resolve": "^7.1.3",
     "rollup": "^2.34.0",
-    "sirv-cli": "^0.4.6"
+    "sirv-cli": "^0.4.6",
+    "sirv": "^1.0.0"
   }
 }

@@ -1,9 +1,8 @@
 <script lang="ts">
-    import { state, stateList } from "../stores/stores";
-    import Button from "@smui/button";
+    import { state } from "../stores/stores";
     import { onMount } from "svelte";
     import { advancedSettings } from "../stores/stores";
-    import { slide, fade } from "svelte/transition";
+    import { slide } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
     import FormField from "@smui/form-field";
     import Switch from "@smui/switch";
@@ -47,13 +46,15 @@
     .intro {
         position: fixed;
         top: 0;
-        width: 100%;
-        height: 50%;
+        left: 0;
+        /* width: 100%; */
+        /* height: 50%; */
         background: rgb(255, 255, 255);
         overflow: visible;
-        background-color: hsla(0, 0%, 100%, 0.8);
+        /* background-color: hsla(0, 0%, 100%, 0.8); */
         z-index: 10;
         box-shadow: 0px 3px 2px 0px #91949b;
+        padding: 0 2rem;
     }
 
     .pressed {
@@ -61,12 +62,11 @@
         -webkit-transition: -webkit-transform 0.5s;
         transition: transform 0.2s;
         cursor: pointer;
+        padding-bottom: 2rem;
     }
 
     .pressed:hover {
         color: darkcyan;
-        -webkit-transform: translate(0, -2px);
-        transform: translate(0, -2px);
     }
 </style>
 
@@ -75,7 +75,7 @@
         class="intro"
         transition:slide={{ delay: 100, duration: 500, easing: cubicOut }}>
         <div style="background-color: hsla(0, 0%, 100%, 0.8);">
-            <h2>Введение</h2>
+            <h2>Приветствие</h2>
             <div class="history-buttons__row">
                 <span class="material-icons"> chat_bubble_outline </span>
 
@@ -89,7 +89,7 @@
                 <div class="settings__element">
                     <FormField align="end">
                         <span slot="label">
-                            Показывать введение и дальше?
+                            Показывать приветствие и дальше?
                         </span>
                         <Switch
                             bind:checked={$advancedSettings.introduction.enabled}
@@ -97,7 +97,7 @@
                     </FormField>
                 </div>
 
-                <p>Включить/отключить показ введения можно в расширенных настройках.</p>
+                <p>Включить/отключить показ приветствия можно в расширенных настройках.</p>
 
                 <span on:click={toggleShow} class="material-icons pressed">
                     close

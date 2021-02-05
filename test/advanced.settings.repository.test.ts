@@ -9,7 +9,7 @@ describe('Class Advanced settings repository', () => {
     it('Golden test. validationDataIntegrity', () => {
         // expect(true).to.be.true;
         
-        let inputStr = `{"saveHistory":{"label":"Сохранение результатов в историю","enabled":true},"autoloadSettingsConfig":{"label":"Автозагрузка сохранённой конфигурации","enabled":true},"progressBar":{"label":"Индикатор прогресса","selected":"default"},"barWeight":{"label":"Дополнительный вес в кг","value":0},"introduction":{"label":"Показывать введение","enabled":true}}`;
+        let inputStr = `{"saveHistory":{"label":"Сохранение результатов в историю","enabled":true},"autoloadSettingsConfig":{"label":"Автозагрузка сохранённой конфигурации","enabled":true},"progressBar":{"label":"Индикатор прогресса","selected":"default"},"barWeight":{"label":"Дополнительный вес в кг","value":0},"introduction":{"label":"Показывать приветствие","enabled":true}}`;
         let needleResult = inputStr;
 
         let repository: AdvancedSettingsRepository = new AdvancedSettingsRepository;

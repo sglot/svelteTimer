@@ -1,31 +1,29 @@
 <script lang="ts">
-    import Timer from './Timer.svelte';
-	import Info from './Info.svelte';
-	import AdvancedSettings from './settings/AdvancedSettings.svelte';
-	import Settings from './settings/Settings.svelte';
-import Introduction from './Introduction.svelte';
+	import Timer from "./Timer.svelte";
+	import Info from "./Info.svelte";
+	import AdvancedSettings from "./settings/AdvancedSettings.svelte";
+	import Settings from "./settings/Settings.svelte";
+	import Introduction from "./Introduction.svelte";
 </script>
 
 <main>
-		
-	<Info/>
+	<Info />
 
 	<p>Svelte Timer. Inspired by "Chto, opyat?"</p>
 
-	<Settings/>
+	<Settings />
 
-	<Introduction/>
+	<Introduction />
 
-	<Timer/>
-	
-	<AdvancedSettings/>
+	<Timer />
+
+	<AdvancedSettings />
 </main>
 
 <style>
 	main {
 		text-align: center;
 		padding: 1em;
-		/*max-width: 1240px;*/
 		margin: 0 auto;
 	}
 
@@ -36,15 +34,16 @@ import Introduction from './Introduction.svelte';
 	}
 
 	main {
-    text-align: center;
-    padding: 1em;
-    margin: 0 auto;
-  }
+		text-align: center;
+		padding: 1em;
+		margin: 0 auto;
+	}
 
-  @media (max-width: 640px) {
-    main {
-		padding-left: 0;
-		padding-right: 0;
-  	}
-  }
+	@media (max-width: 640px) {
+		main {
+			padding-left: 0;
+			padding-right: 0;
+			margin: 0 2rem;
+		}
+	}
 </style>
