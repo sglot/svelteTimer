@@ -47,9 +47,10 @@
         position: fixed;
         top: 0;
         left: 0;
-        /* width: 100%; */
+        width: calc(100% - 4rem);
         /* height: 50%; */
-        background: rgb(255, 255, 255);
+        background: var(--bg-second);
+        color: var(--color-second);
         overflow: visible;
         /* background-color: hsla(0, 0%, 100%, 0.8); */
         z-index: 10;
@@ -68,13 +69,19 @@
     .pressed:hover {
         color: darkcyan;
     }
+
+    @media(max-width: 1080px) {
+        .intro {
+            width: fit-content;
+        }
+    }
 </style>
 
 {#if showIntro}
     <div
         class="intro"
         transition:slide={{ delay: 100, duration: 500, easing: cubicOut }}>
-        <div style="background-color: hsla(0, 0%, 100%, 0.8);">
+        <div>
             <h2>Приветствие</h2>
             <div class="history-buttons__row">
                 <span class="material-icons"> chat_bubble_outline </span>

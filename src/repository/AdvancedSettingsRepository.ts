@@ -9,7 +9,8 @@ export class AdvancedSettingsRepository extends LocalStorageRepositorySase {
         "autoloadSettingsConfig", 
         "progressBar", 
         "barWeight",
-        "introduction"
+        "introduction",
+        "theme"
     ];
 
     public static RULES: rules = {

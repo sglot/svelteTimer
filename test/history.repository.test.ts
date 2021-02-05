@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-// import { } from 'mocha';
 import {HistoryRepository } from '../src/repository/HistoryRepository';
 
 var assert = require('assert');

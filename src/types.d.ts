@@ -29,14 +29,23 @@ type circleConfig = {
 type advancedSettings = {
   label:          string,
   enabled?:       boolean,
-  selected?:      progressBarType,
+  selected?:      selectedType,
   value?:         number,
 }
+
+type selectedType = progressBarType | themeType;
 
 type progressBarType = "default" | "separated" | "tiny"
 
 type progressBar = {
   name:           progressBarType,
+  label:          string,
+}
+
+type themeType = "theme-snow" | "theme-night"
+
+type theme = {
+  name:           themeType,
   label:          string,
 }
 

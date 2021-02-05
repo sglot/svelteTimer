@@ -10,7 +10,7 @@ let list: {[K in state]: string} = {
     end:        'Конец'
 };
 
-let progBarList: progressBar[] =
+let listOfProgressBars: progressBar[] =
     [
         {
             name: "default",
@@ -23,6 +23,18 @@ let progBarList: progressBar[] =
         {
             name: "tiny",
             label: "Тонкий"
+        },
+    ];
+
+let listOfThemes: theme[] =
+    [
+        {
+            name: "theme-snow",
+            label: "Снег"
+        },
+        {
+            name: "theme-night",
+            label: "Ночь"
         },
     ];
 
@@ -39,16 +51,22 @@ export let advSettings: Record<string, advancedSettings> = {
 
     "progressBar":              {
         label:      "Индикатор прогресса",
-        selected:   progBarList[0].name
+        selected:   listOfProgressBars[0].name
     },
     
     "barWeight": {
         label:      "Дополнительный вес в кг",
         value:      0
     },
+
     "introduction": {
         label:      "Показывать приветствие",
         enabled:    true
+    },
+
+    "theme":              {
+        label:      "Тема",
+        selected:   listOfThemes[0].name
     },
 }
 
@@ -71,4 +89,5 @@ export
         savedSettings           = writable(makeDefaultSettings()),
         settings                = writable(makeDefaultSettings()),
         advancedSettings        = writable(advSettings),
-        progressBarList         = writable(progBarList);
+        progressBarList         = writable(listOfProgressBars),
+        themeList               = writable(listOfThemes);

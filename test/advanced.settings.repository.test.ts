@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-// import { } from 'mocha';
 import { AdvancedSettingsRepository } from '../src/repository/AdvancedSettingsRepository';
 
 var assert = require('assert');
@@ -9,7 +7,7 @@ describe('Class Advanced settings repository', () => {
     it('Golden test. validationDataIntegrity', () => {
         // expect(true).to.be.true;
         
-        let inputStr = `{"saveHistory":{"label":"Сохранение результатов в историю","enabled":true},"autoloadSettingsConfig":{"label":"Автозагрузка сохранённой конфигурации","enabled":true},"progressBar":{"label":"Индикатор прогресса","selected":"default"},"barWeight":{"label":"Дополнительный вес в кг","value":0},"introduction":{"label":"Показывать приветствие","enabled":true}}`;
+        let inputStr = `{"saveHistory":{"label":"Сохранение результатов в историю","enabled":true},"autoloadSettingsConfig":{"label":"Автозагрузка сохранённой конфигурации","enabled":true},"progressBar":{"label":"Индикатор прогресса","selected":"default"},"barWeight":{"label":"Дополнительный вес в кг","value":0},"introduction":{"label":"Показывать приветствие","enabled":true},"theme":{"label":"Тема","selected":"theme-snow"}}`;
         let needleResult = inputStr;
 
         let repository: AdvancedSettingsRepository = new AdvancedSettingsRepository;

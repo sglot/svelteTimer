@@ -905,22 +905,23 @@ import { HistoryRepository } from "../repository/HistoryRepository";
   </div>
 {/if}
 
-<div id="btn_start" />
+<div id="btn_start" style="margin: 2rem 0;">
 <Button on:click={start} variant="unelevated" disabled={started}>
   <span class="material-icons">
-    play_arrow
-  </span>
-</Button>
+      play_arrow
+    </span>
+  </Button>
 
-<Button
-  on:click={setPauseState}
-  variant="outlined"
-  disabled={!preworked || currentState === states.recovery}
-  color="secondary">
-  <span class="material-icons">
-    pause
-  </span>
-</Button>
+  <Button
+    on:click={setPauseState}
+    variant="outlined"
+    disabled={!preworked || currentState === states.recovery}
+    color="secondary">
+    <span class="material-icons">
+      pause
+    </span>
+  </Button>
+</div>
 
 <div class="tablo-side">
   <div class="clock-common" id="clock-common">

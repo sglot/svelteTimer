@@ -4,6 +4,7 @@
         stateList,
         advancedSettings,
         progressBarList,
+        themeList
     } from "../../stores/stores";
 
     import { AdvancedSettingsRepository } from "../../repository/AdvancedSettingsRepository";
@@ -29,7 +30,8 @@
         "autoloadSettingsConfig", 
         "progressBar", 
         "barWeight",
-        "introduction"
+        "introduction",
+        "theme"
     ];
     
     $: weight = () => {
@@ -66,7 +68,22 @@
             console.log("(advanced) config was loaded");
         }
         isLoaded = true;
+
+        setTheme();
     }  
+
+    function setTheme() {
+        setTimeout(() => {
+            let body = document.querySelector('body');
+            console.log(body.classList[0]);
+            console.log($advancedSettings.theme.selected);
+            if (body.classList[0] !== $advancedSettings.theme.selected) {
+                body.classList.remove(body.classList[0]);
+                body.classList.add($advancedSettings.theme.selected);
+            }
+        }, 105);
+        
+    }
 
     function scrollTo(id: string) {
         setTimeout(() => {
@@ -220,6 +237,22 @@
                 <Slider 
                 bind:value={$advancedSettings.barWeight.value} 
                 min={0} max={100} step={1} discrete displayMarkers />
+            </div>
+
+            <div
+                class="settings__element progress__block">
+                <div>Тема:</div>
+                <div class="progress__items">
+                    {#each $themeList as option}
+                        <FormField style="margin-right: 1em;">
+                            <Radio
+                                bind:group={$advancedSettings.theme.selected}
+                                on:click={() => {save(); setTheme();}}
+                                value={option.name} />
+                            <span slot="label">{option.label}</span>
+                        </FormField>
+                    {/each}
+                </div>
             </div>
         </div>
     {/if}

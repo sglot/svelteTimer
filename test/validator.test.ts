@@ -1,5 +1,3 @@
-import * as Format from "../src/core/format";
-import { AdvancedSettingsRepository } from "../src/repository/AdvancedSettingsRepository";
 import { Validator } from "../src/validator/Validator";
 var assert = require('assert');
 

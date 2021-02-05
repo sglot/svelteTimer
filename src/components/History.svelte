@@ -77,7 +77,8 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgb(255, 255, 255);
+        background: var(--bg-second);
+        color: var(--color-second);
         overflow-y: scroll;
         /* transition: overflow 0.5s cubic-bezier(0, 0, 1, 1); */
         /* opacity: 0.9;
@@ -140,7 +141,7 @@
         id="history"
         transition:slide={{ delay: 100, duration: 500, easing: cubicOut }}>
 
-        <div style="background-color: hsla(0, 0%, 100%, 0.8);">
+        <div>
             <h2>История</h2>
             <div class="history-buttons__row">
                 <span class="material-icons"> history </span>
