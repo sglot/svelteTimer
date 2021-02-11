@@ -5,6 +5,7 @@
 	--bg-second: #fff;
 	--a-color: rgb(0,100,200);
 	transition: 0.2s all;
+	--btn-color: inherit;
 }
 
 .theme-night {
@@ -14,6 +15,8 @@
 	--bg-second: #031f30;
 	--a-color: var(--a-color);
 	transition: 0.2s all;
+	--btn-color: rgba(153, 205, 50, 0.719);
+	--btn-color-disabled: rgba(153, 205, 50, 0.349);
 }
 
 .mdc-form-field {
@@ -24,9 +27,81 @@
     background-color: #111186!important;
 }
 
+.mdc-icon-button {
+	color: var(--btn-color)!important;
+}
+
+.theme-night main .settings .mdc-icon-button:after, .mdc-icon-button:before {
+    background-color: var(--btn-color);
+}
+
+.theme-night #btn_start .mdc-button:disabled {
+    color: var(--btn-color);
+}
+
+.theme-night #btn_start .mdc-button--outlined:disabled {
+    border-color: var(--btn-color);
+}
+
+button:not(:disabled):active {
+    background-color: transparent!important;
+}
+
+.mdc-icon-button:disabled {
+	color: var(--btn-color-disabled)!important;
+}
+
+
 .theme-night .mdc-radio .mdc-radio__native-control:enabled:not(:checked)+.mdc-radio__background .mdc-radio__outer-circle {
     border-color: rgb(28 148 232 / 52%)!important;
 }
+
+.theme-night main .advanced-settings__block .settings__element  .mdc-switch.mdc-switch--checked .mdc-switch__track {
+	background-color: #111186!important;
+	border-color: #111186!important;
+}
+
+.theme-night main .advanced-settings__block .settings__element  .mdc-switch.mdc-switch--checked .mdc-switch__thumb-underlay .mdc-switch__thumb {
+	background-color: #111186!important;
+	border-color: #111186!important;
+}
+
+.theme-night main .advanced-settings__block .settings__element  .mdc-switch .mdc-switch__thumb-underlay .mdc-switch__thumb {
+	background-color: #111186!important;
+	border-color: #111186!important;
+}
+
+.theme-night main .advanced-settings__block .settings__element  .mdc-switch .mdc-switch__track {
+	background-color: #00008a!important;
+	border-color: #00008a!important;
+}
+
+
+
+.theme-night main .advanced-settings__block .settings__element  .mdc-radio .mdc-radio__native-control:enabled:checked+.mdc-radio__background .mdc-radio__outer-circle {
+	background-color: #111186!important;
+	border-color: #111186!important;
+}
+
+
+.theme-night main .advanced-settings__block .settings__element  .mdc-slider:not(.mdc-slider--disabled) .mdc-slider__track {
+	background-color: #111186!important;
+	border-color: #111186!important;
+}
+
+
+
+.theme-night main .advanced-settings__block .settings__element .mdc-slider:not(.mdc-slider--disabled) .mdc-slider__thumb-container .mdc-slider__focus-ring {
+	background-color: #111186!important;
+	border-color: #111186!important;
+}
+
+.theme-night main .advanced-settings__block .settings__element .mdc-slider:not(.mdc-slider--disabled) .mdc-slider__thumb-container .mdc-slider__pin {
+	background-color: #111186!important;
+	border-color: #111186!important;
+}
+
+
 
 html, body {
 	position: relative;

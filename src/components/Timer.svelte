@@ -912,7 +912,7 @@ import { HistoryRepository } from "../repository/HistoryRepository";
     </span>
   </Button>
 
-  <Button
+  <Button id="btn_pause"
     on:click={setPauseState}
     variant="outlined"
     disabled={!preworked || currentState === states.recovery}
