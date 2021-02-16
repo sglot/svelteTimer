@@ -58,6 +58,11 @@
         padding: 0 2rem;
     }
 
+    
+    .intro p {
+        color: var(--color-second)!important;
+    }
+
     .pressed {
         display: inline-block;
         -webkit-transition: -webkit-transform 0.5s;

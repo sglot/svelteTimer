@@ -9,19 +9,24 @@
 }
 
 .theme-night {
-	--color: #333;
-	--color-second: #888;
+	--color: #fff;
+	--color-second: #bfa7a7;
+	--color-third: #c53c3c;
 	--bg: #000;
 	--bg-second: #031f30;
 	--a-color: var(--a-color);
 	transition: 0.2s all;
 	--btn-color: rgba(153, 205, 50, 0.719);
 	--btn-color-disabled: rgba(153, 205, 50, 0.349);
+
+	--mdc-color:  rgb(0 34 199 / 92%);
 }
 
-.mdc-form-field {
-	color: var(--color-second)!important;
+.mdc-form-field, main p {
+	color: var(--color-third)!important;
 }
+
+
 
 .mdc-radio:after, .mdc-radio:before {
     background-color: #111186!important;
@@ -53,52 +58,52 @@ button:not(:disabled):active {
 
 
 .theme-night .mdc-radio .mdc-radio__native-control:enabled:not(:checked)+.mdc-radio__background .mdc-radio__outer-circle {
-    border-color: rgb(28 148 232 / 52%)!important;
+    border-color: var(--mdc-color)!important;
 }
 
 .theme-night main .advanced-settings__block .settings__element  .mdc-switch.mdc-switch--checked .mdc-switch__track {
-	background-color: #111186!important;
-	border-color: #111186!important;
+	background-color: var(--mdc-color)!important;
+	border-color: var(--mdc-color)!important;
 }
 
 .theme-night main .advanced-settings__block .settings__element  .mdc-switch.mdc-switch--checked .mdc-switch__thumb-underlay .mdc-switch__thumb {
-	background-color: #111186!important;
-	border-color: #111186!important;
+	background-color: var(--mdc-color)!important;
+	border-color: var(--mdc-color)!important;
 }
 
 .theme-night main .advanced-settings__block .settings__element  .mdc-switch .mdc-switch__thumb-underlay .mdc-switch__thumb {
-	background-color: #111186!important;
-	border-color: #111186!important;
+	background-color: var(--mdc-color)!important;
+	border-color: var(--mdc-color)!important;
 }
 
 .theme-night main .advanced-settings__block .settings__element  .mdc-switch .mdc-switch__track {
-	background-color: #00008a!important;
-	border-color: #00008a!important;
+	background-color: var(--mdc-color)!important;
+	border-color: var(--mdc-color)!important;
 }
 
 
 
 .theme-night main .advanced-settings__block .settings__element  .mdc-radio .mdc-radio__native-control:enabled:checked+.mdc-radio__background .mdc-radio__outer-circle {
-	background-color: #111186!important;
-	border-color: #111186!important;
+	background-color: var(--mdc-color)!important;
+	border-color: var(--mdc-color)!important;
 }
 
 
 .theme-night main .advanced-settings__block .settings__element  .mdc-slider:not(.mdc-slider--disabled) .mdc-slider__track {
-	background-color: #111186!important;
-	border-color: #111186!important;
+	background-color: var(--mdc-color)!important;
+	border-color: var(--mdc-color)!important;
 }
 
 
 
 .theme-night main .advanced-settings__block .settings__element .mdc-slider:not(.mdc-slider--disabled) .mdc-slider__thumb-container .mdc-slider__focus-ring {
-	background-color: #111186!important;
-	border-color: #111186!important;
+	background-color: var(--mdc-color)!important;
+	border-color: var(--mdc-color)!important;
 }
 
 .theme-night main .advanced-settings__block .settings__element .mdc-slider:not(.mdc-slider--disabled) .mdc-slider__thumb-container .mdc-slider__pin {
-	background-color: #111186!important;
-	border-color: #111186!important;
+	background-color: var(--mdc-color)!important;
+	border-color: var(--mdc-color)!important;
 }
 
 

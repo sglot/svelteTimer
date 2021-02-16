@@ -721,6 +721,10 @@ import { HistoryRepository } from "../repository/HistoryRepository";
     flex-flow: column;
   }
 
+  .time-block > p {
+    color: var(--color)!important;
+  }
+
   .settings-block--time {
     width: 300px;
     height: 300px;
