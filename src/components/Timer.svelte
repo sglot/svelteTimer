@@ -488,7 +488,9 @@ import { HistoryRepository } from "../repository/HistoryRepository";
       "work": $settings.workTime,
       "relax": $settings.relaxTime,
       "laps": $settings.laps,
-      "success": true
+      "success": true,
+      "weight": $advancedSettings.barWeight.value,
+      "comment": ""
     }
 
     console.log('timer -> ', allHistory);

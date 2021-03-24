@@ -64,5 +64,7 @@ type historyRow = {
   relax:      number,
   laps:       number,
   success:    boolean,
-  time?:      string
+  time?:      string,
+  weight:     number,
+  comment:    string
 }

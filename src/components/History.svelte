@@ -27,9 +27,9 @@
         load();
     }
 
-    function load() {
+    function load(modify: boolean = true) {
         let loaded;
-        if ((loaded = repository.load(true))) {
+        if ((loaded = repository.load(modify))) {
             history = loaded;
 
             console.log("history ==== ", history);
@@ -47,6 +47,16 @@
         // }, 100);
     }
 
+    function changeComment(id: string) {
+        load(false);
+        let index = history.findIndex((row) => row.id == id);
+        history[index].comment = prompt("Комментарий", history[index].comment);
+        repository.save(history);
+        load();
+    }
+
+
+    
     let width;
     
     $: mobile = width < 640 ? true : false;
@@ -126,6 +136,24 @@
     .history-icons_mobile {
         line-height: 2em;
     }
+
+    @media (max-width: 750px) {
+        :global().mdc-data-table__cell, :global().mdc-data-table__header-cell {
+            padding-right: 12px!important;
+            padding-left: 12px!important;
+        }
+    }
+
+    @media (max-width: 640px) {
+        :global().mdc-data-table__cell, :global().mdc-data-table__header-cell {
+            padding-right: 6px!important;
+            padding-left: 6px!important;
+        }
+
+        .table-cell__combo {
+            font-size: 1em;
+        }
+    }
 </style>
 
 <span
@@ -144,7 +172,7 @@
         <div>
             <h2>История</h2>
             <div class="history-buttons__row">
-                <span class="material-icons"> history </span>
+                <!-- <span class="material-icons"> history </span> -->
                 <span
                     on:click={toggleShow}
                     class="material-icons pressed">
@@ -183,6 +211,16 @@
                                     trip_origin
                                 </span>
                             </Cell>
+                            <Cell>
+                                <span class="material-icons history-icons_mobile">
+                                    exposure_plus_1
+                                </span>
+                            </Cell>
+                            <Cell>
+                                <span class="material-icons history-icons_mobile">
+                                    comment
+                                </span>
+                            </Cell>
                         </Row>
                     </Head>
                     <Body>
@@ -215,7 +253,24 @@
                                     <span class="relax"> {row.relax} </span>
                                 </Cell>
                                 <Cell>{row.laps}</Cell>
-                                <Cell />
+                            
+                                <Cell>
+                                    {#if row.weight}
+                                            {row.weight}
+                                    {:else}
+                                        <span
+                                            class="material-icons uncompleted">
+                                            horizontal_rule
+                                        </span>
+                                    {/if}
+                                </Cell>
+                                <Cell>
+                                    {#if row.comment && row.comment != ""}
+                                        <span class="pressed" on:click={() => changeComment(row.id)}>{row.comment}</span>
+                                    {:else}
+                                        <span class="pressed" on:click={() => changeComment(row.id)}>добавить</span>
+                                    {/if}
+                                </Cell>
                             </Row>
                         {/each}
                     </Body>
@@ -234,6 +289,8 @@
                             <Cell>Отдых</Cell>
                             <Cell>Круги</Cell>
                             <Cell>Завершено</Cell>
+                            <Cell>Вес</Cell>
+                            <Cell>Комментарий</Cell>
                         </Row>
                     </Head>
                     <Body>
@@ -262,6 +319,23 @@
                                             </span>
                                         {/if}
                                     </div>
+                                </Cell>
+                                <Cell>
+                                    {#if row.weight}
+                                            {row.weight}
+                                    {:else}
+                                        <span
+                                            class="material-icons uncompleted">
+                                            horizontal_rule
+                                        </span>
+                                    {/if}
+                                </Cell>
+                                <Cell>
+                                    {#if row.comment && row.comment != ""}
+                                        <span class="pressed" on:click={() => changeComment(row.id)}>{row.comment}</span>
+                                    {:else}
+                                        <span class="pressed" on:click={() => changeComment(row.id)}>добавить</span>
+                                    {/if}
                                 </Cell>
                             </Row>
                         {/each}
